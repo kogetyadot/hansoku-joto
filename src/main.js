@@ -432,28 +432,45 @@ class HansokuJotoApp {
     const meta = MetaProgression.load();
     this.el.recordMaxCombo.textContent = meta.maxComboRecord || 0;
     this.el.recordMaxDmg.textContent = meta.maxTurnDamageRecord || 0;
-    this.el.recordWins.textContent = meta.totalVictories || 0;
+    if (this.el.recordWins) this.el.recordWins.textContent = meta.totalVictories || 0;
+
+    const shortStyleLabels = {
+      brawler: '💥 爆発番長',
+      speedster: '⚡ 超連打',
+      fortress: '🛡️ 倍返し要塞',
+    };
+    const shortStyleSummaries = {
+      brawler: '敵を倒すたび全体7DMG爆発！王道の爽快連鎖スタイル',
+      speedster: '当たるたび全威力+2上昇！手数で圧倒するマシンガンスタイル',
+      fortress: 'ガード獲得ごとに自動砲撃！防御を火力に変えるカウンタースタイル',
+    };
 
     this.el.starterSelection.innerHTML = '';
     Object.values(STARTER_LOADOUTS).forEach((loadout) => {
-      const card = document.createElement('div');
-      card.className = `starter-card ${this.selectedLoadoutId === loadout.id ? 'active' : ''}`;
-      const ruleObj = FOUL_RULES[loadout.startingRule];
-
-      card.innerHTML = `
-        <div class="starter-card-title">${loadout.icon || '🥊'} ${loadout.name}</div>
-        <div class="starter-card-desc">${loadout.subtitle || loadout.description || ''}</div>
-        <div class="starter-card-rule">初期反則ルール: ${ruleObj ? ruleObj.name : ''}</div>
+      const btn = document.createElement('button');
+      const isActive = this.selectedLoadoutId === loadout.id;
+      btn.className = `starter-pill-btn ${isActive ? 'active' : ''}`;
+      btn.innerHTML = `
+        <span class="starter-pill-icon">${loadout.icon || '🥊'}</span>
+        <span>${shortStyleLabels[loadout.id] || loadout.name}</span>
       `;
 
-      card.addEventListener('click', () => {
+      btn.addEventListener('click', () => {
         this.selectedLoadoutId = loadout.id;
         sound.playCardSelect();
         this._renderTitleScreen();
       });
 
-      this.el.starterSelection.appendChild(card);
+      this.el.starterSelection.appendChild(btn);
     });
+
+    const summaryEl = document.getElementById('starter-active-summary');
+    if (summaryEl) {
+      summaryEl.textContent =
+        shortStyleSummaries[this.selectedLoadoutId] ||
+        STARTER_LOADOUTS[this.selectedLoadoutId]?.subtitle ||
+        '';
+    }
   }
 
   openManualModal() {
@@ -485,47 +502,27 @@ class HansokuJotoApp {
     const handMods = handCards.filter((el) => el.classList.contains('mod-card'));
 
     if (!hasAction && handActions.length > 0) {
-      // STEP 1: Choose an Action Card
-      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 1 / 4';
+      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 1';
       if (this.el.tutorialTitle) {
-        this.el.tutorialTitle.textContent = '① 下の手札から【行動カード（黄色）】を1枚クリック！';
-      }
-      if (this.el.tutorialText) {
-        this.el.tutorialText.textContent =
-          '黄色いカードが「攻撃や防御の土台」になります。光っている黄色いカードをクリックして STEP 1 にセットしましょう！';
+        this.el.tutorialTitle.textContent = '光っている【黄色カード】を1枚タップ！';
       }
       handActions.forEach((el) => el.classList.add('tutorial-highlight-pulse'));
     } else if (slottedModsCount === 0 && handMods.length > 0) {
-      // STEP 2: Attach 1st Mod Card
-      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 2 / 4';
+      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 2';
       if (this.el.tutorialTitle) {
-        this.el.tutorialTitle.textContent = '② 次に【改変カード（青色）】を1枚クリックして重ねよう！';
-      }
-      if (this.el.tutorialText) {
-        this.el.tutorialText.textContent =
-          '青いカードを重ねると「3連発」「誘爆」「全体攻撃化」など技のルールが魔改造されます！';
+        this.el.tutorialTitle.textContent = '光っている【青色カード】をタップして重ねよう！';
       }
       handMods.forEach((el) => el.classList.add('tutorial-highlight-pulse'));
     } else if (slottedModsCount === 1 && handMods.length > 0) {
-      // STEP 3: Attach 2nd Mod Card
-      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 3 / 4';
+      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 3';
       if (this.el.tutorialTitle) {
-        this.el.tutorialTitle.textContent = '③ もう1枚【改変カード（青色）】を重ねてコンボを完成させよう！';
-      }
-      if (this.el.tutorialText) {
-        this.el.tutorialText.textContent =
-          '改変カードは2枚まで合成できます！（例：3連発 × 誘爆 ＝ 3連続で全体爆発！）';
+        this.el.tutorialTitle.textContent = 'もう1枚【青色カード】を重ねよう！（そのまま発射もOK）';
       }
       handMods.forEach((el) => el.classList.add('tutorial-highlight-pulse'));
     } else {
-      // STEP 4: Press FIRE!
-      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 4 / 4';
+      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'FINISH';
       if (this.el.tutorialTitle) {
-        this.el.tutorialTitle.textContent = '④ コンボ予測を確認して、右下の『🔥 発射！』ボタンを押そう！';
-      }
-      if (this.el.tutorialText) {
-        this.el.tutorialText.textContent =
-          '『🔥 発射！』を押すと改造コンボと上部の「反則ルール（死体爆弾など）」が連鎖して敵を吹き飛ばします！（上の「赤ペン改造」もいつでも使えます）';
+        this.el.tutorialTitle.textContent = '右下の『🔥 発射！』をタップして連鎖発動！';
       }
       if (this.el.btnFireCombo) {
         this.el.btnFireCombo.classList.add('tutorial-highlight-pulse');
@@ -757,11 +754,14 @@ class HansokuJotoApp {
       const card = document.createElement('div');
       card.className = `enemy-hud-card ${isTargeted ? 'targeted' : ''}`;
       card.dataset.enemyId = enemy.uid;
+      if (enemy.passiveDesc) {
+        card.title = `${enemy.passiveName}: ${enemy.passiveDesc}`;
+      }
 
       card.innerHTML = `
         <div class="enemy-name-row">
-          <span>${isTargeted ? '<span class="enemy-target-tag">TARGET</span>' : ''}${enemy.name}</span>
-          ${enemy.armor > 0 ? `<span title="1ヒットごとにダメージ-${enemy.armor}">🛡️-${enemy.armor}</span>` : ''}
+          <span>${isTargeted ? '<span class="enemy-target-tag">狙い</span>' : ''}${enemy.name}</span>
+          ${enemy.armor > 0 ? `<span title="ダメージ軽減-${enemy.armor}">🛡️-${enemy.armor}</span>` : ''}
           ${enemy.vulnerable > 0 ? `<span style="color:#ff6b6b" title="被ダメージ+${enemy.vulnerable}">💔+${enemy.vulnerable}</span>` : ''}
         </div>
         <div class="enemy-hp-bar-outer">
@@ -769,13 +769,8 @@ class HansokuJotoApp {
           <div class="enemy-hp-text">${enemy.hp} / ${enemy.maxHp}</div>
         </div>
         <div class="enemy-intent-row">
-          <span>予告: ${intent.label}</span>
+          <span>次: ${intent.label}</span>
         </div>
-        ${
-          enemy.passiveDesc
-            ? `<div class="enemy-passive-row">★${enemy.passiveName}: ${enemy.passiveDesc}</div>`
-            : ''
-        }
       `;
 
       card.addEventListener('click', () => {
@@ -811,9 +806,9 @@ class HansokuJotoApp {
             : window.innerHeight - 60;
 
         const isMobile = window.innerWidth <= 640;
-        const halfCardW = isMobile ? 60 : 96;
-        const cardH = isMobile ? 60 : 92;
-        const minY = Math.max(85, topBarBottom + cardH + 6);
+        const halfCardW = isMobile ? 58 : 88;
+        const cardH = isMobile ? 54 : 76;
+        const minY = Math.max(80, topBarBottom + cardH + 6);
         const maxY = Math.max(minY + 16, combatTop - 8);
 
         const items = [];
@@ -831,8 +826,8 @@ class HansokuJotoApp {
 
         // Multi-pass anti-overlap separation so enemy HUD cards are always cleanly readable!
         items.sort((a, b) => a.x - b.x);
-        const minSepX = isMobile ? 118 : 184;
-        const minSepY = isMobile ? 54 : 92;
+        const minSepX = isMobile ? 116 : 168;
+        const minSepY = isMobile ? 52 : 76;
 
         for (let pass = 0; pass < 2; pass++) {
           for (let i = 0; i < items.length; i++) {
@@ -871,12 +866,12 @@ class HansokuJotoApp {
     const rs = this.runState;
 
     const areaLabelEl = this.el.hudAreaBadge.querySelector('.area-label');
-    if (areaLabelEl) areaLabelEl.textContent = `AREA ${rs.currentArea}/3`;
-    this.el.hudNodeName.textContent = `STEP ${(rs.currentStep || 0) + 1}/5`;
+    if (areaLabelEl) areaLabelEl.textContent = `AREA ${rs.currentArea}`;
+    this.el.hudNodeName.textContent = `${(rs.currentStep || 0) + 1}/5`;
 
     const hpPct = Math.max(0, Math.min(100, Math.round((rs.hp / rs.maxHp) * 100)));
     this.el.hudHpFill.style.width = `${hpPct}%`;
-    this.el.hudHpText.textContent = `${rs.hp} / ${rs.maxHp}`;
+    this.el.hudHpText.textContent = `${rs.hp}/${rs.maxHp}`;
     this.el.hudGuardText.textContent = rs.guard;
     this.el.hudGoldText.textContent = `${rs.gold}G`;
     this.el.hudRedpenCount.textContent = rs.redPens;
@@ -917,7 +912,7 @@ class HansokuJotoApp {
       this.el.slotAction.innerHTML = `
         <div class="slot-placeholder">
           <span class="placeholder-icon">👊</span>
-          <span class="placeholder-text">素手パンチ待機中<br><small>(行動カードで上書き可)</small></span>
+          <span class="placeholder-text">素手パンチ(4)</span>
         </div>
       `;
     } else {
@@ -936,7 +931,7 @@ class HansokuJotoApp {
         slotEl.innerHTML = `
           <div class="slot-placeholder">
             <span class="placeholder-icon">${idx === 0 ? '⚡' : '💥'}</span>
-            <span class="placeholder-text">改変カードを重ねる<br><small>(手札の青カードを選択)</small></span>
+            <span class="placeholder-text">青カード</span>
           </div>
         `;
       } else {
@@ -996,40 +991,70 @@ class HansokuJotoApp {
     this._renderCombatCardsAndSlots();
   }
 
+  /**
+   * Generates an instant-read short summary tag for any card so the player doesn't have to read paragraphs!
+   */
+  _getShortCardSummary(card) {
+    const id = card.templateId || card.id;
+    const isAll = card.target === 'all' || card.overrideTarget === 'all';
+    const tgt = isAll ? '全員' : '単体';
+
+    if (card.type === 'action') {
+      const dmg = card.baseDamage || 0;
+      const hits = card.hits || 1;
+      if (id === 'guard_stance') return `🛡️+${card.guardGain || 12} & 盾撃`;
+      if (id === 'shield_slam') return `🛡️+${card.guardGain || 6} & 盾100%攻撃`;
+      if (id === 'counter_stance') return `🛡️+${card.guardGain || 8} & 倍返し`;
+      let base = hits > 1 ? `${tgt} ${dmg}×${hits}回` : `${tgt} ${dmg} DMG`;
+      if (card.explosionOnHit > 0) base += ` + 💥爆発${card.explosionOnHit}`;
+      else if (card.explosionOnKill > 0) base += ` + 💀撃破爆発${card.explosionOnKill}`;
+      else if (card.splashDamage > 0) base += ` + 衝撃波${card.splashDamage}`;
+      return base;
+    }
+
+    // Mod cards
+    const modShortMap = {
+      triple_hit: `回数 +${card.hitsAdd || 2}回`,
+      heavy_swing: `威力 ×${card.damageMultiplier || 2.5}倍`,
+      share_all: '対象 → 敵全員化',
+      induce_explosion: `命中ごと 💥爆発${card.explosionOnHitAdd || 3}`,
+      encore: '撃破で 再発動！',
+      insurance: `命中ごと 🛡️+${card.guardOnHit || 4}`,
+      payback: '被ダメ分 威力UP',
+      low_hp_bonus: '瀕死で 威力3倍',
+      vampire: '命中で HP吸収',
+      armor_crush: `軽減貫通 & 💔+${card.vulnOnHit || 3}`,
+      double_cast: 'コンボ 2回連続発動',
+      guard_convert: '🛡️値を 攻撃力に加算',
+    };
+    return modShortMap[id] || card.description;
+  }
+
   _createCardElement(card, { inSlot = false, isSlotted = false } = {}) {
     const div = document.createElement('div');
     const isAction = card.type === 'action';
     div.className = `game-card ${isAction ? 'action-card' : 'mod-card'} ${
       inSlot ? 'in-slot' : ''
     } ${isSlotted ? 'selected-in-hand' : ''}`;
+    div.title = `${card.name}: ${card.description}`;
 
     const marks = card.redPenMarks || [];
     const latestMark = marks.length > 0 ? marks[marks.length - 1] : null;
+    const shortSummary = this._getShortCardSummary(card);
 
     let descContentHtml = '';
-    if (marks.length > 0) {
-      // Show compact red strikethrough of old text + bold handwritten red new effect so it never overflows!
-      const m = latestMark;
+    if (latestMark) {
       descContentHtml = `
-        <div class="redpen-strike">${m.oldText || card.description}</div>
-        <div class="redpen-handwriting">🖍️ ${m.newText || m.label}</div>
+        <div class="redpen-handwriting">🖍️ ${latestMark.newText || shortSummary}</div>
       `;
     } else {
-      descContentHtml = `<div>${card.description}</div>`;
+      descContentHtml = `<div>${shortSummary}</div>`;
     }
-
-    let footerLeft = '';
-    if (isAction) {
-      footerLeft = `${card.baseDamage || 0} DMG × ${card.hits || 1}回`;
-    } else {
-      footerLeft = '改変パーツ';
-    }
-    const footerRight = card.target === 'all' || card.overrideTarget === 'all' ? '対象:全員' : '対象:単体';
 
     div.innerHTML = `
       ${
         latestMark
-          ? `<div class="card-redpen-stamp">${latestMark.stamp || '赤ペン改変!'}</div>`
+          ? `<div class="card-redpen-stamp">${latestMark.stamp || '赤ペン!'}</div>`
           : ''
       }
       <div class="card-top-row">
@@ -1039,10 +1064,6 @@ class HansokuJotoApp {
       <div class="card-title">${card.name}</div>
       <div class="card-desc">
         ${descContentHtml}
-      </div>
-      <div class="card-footer-stats">
-        <span>${footerLeft}</span>
-        <span>${footerRight}</span>
       </div>
     `;
 
@@ -1061,18 +1082,16 @@ class HansokuJotoApp {
 
     const aliveCount = this.combat.getAliveEnemies().length;
     const isAll = preview.targetMode === 'all';
-    this.el.previewTargetBadge.textContent = isAll
-      ? `対象: 敵全員 (${aliveCount}体)`
-      : '対象: 敵1体';
+    this.el.previewTargetBadge.textContent = isAll ? `敵全員(${aliveCount}体)` : '敵1体';
 
-    let formulaHtml = `${preview.actionCard.name}: <strong>${preview.estimatedDamagePerHit}</strong> DMG × <strong>${preview.estimatedHits}</strong>回`;
+    let formulaHtml = `${preview.estimatedDamagePerHit} DMG × ${preview.estimatedHits}回`;
     if (isAll && aliveCount > 1) {
       formulaHtml += ` × ${aliveCount}体`;
     }
-    formulaHtml += ` = <strong class="preview-total">${preview.estimatedTotalDirectDamage}</strong> DMG`;
+    formulaHtml += ` = <strong class="preview-total">${preview.estimatedTotalDirectDamage}</strong>`;
 
     if (preview.explosionDamagePerHit > 0) {
-      formulaHtml += ` <span style="color:#ff6b6b">+ 誘爆(${preview.explosionDamagePerHit}×全員)</span>`;
+      formulaHtml += ` <span style="color:#ff6b6b">+ 💥${preview.explosionDamagePerHit}</span>`;
     }
     if (preview.projectedGuardGain > 0) {
       formulaHtml += ` <span style="color:#00e5ff">+ 🛡️${preview.projectedGuardGain}</span>`;
@@ -1081,22 +1100,14 @@ class HansokuJotoApp {
     this.el.previewFormulaText.innerHTML = formulaHtml;
 
     this.el.previewSynergiesList.innerHTML = '';
-    if (preview.activeSynergies.length === 0) {
-      const hint = document.createElement('span');
-      hint.className = 'synergy-pill';
-      hint.style.background = 'rgba(148, 163, 184, 0.15)';
-      hint.style.borderColor = '#475569';
-      hint.style.color = '#cbd5e1';
-      hint.textContent = '改変カードを重ねると異常なシナジーが発生します！';
-      this.el.previewSynergiesList.appendChild(hint);
-    } else {
-      preview.activeSynergies.slice(0, 4).forEach((syn) => {
-        const pill = document.createElement('span');
-        pill.className = 'synergy-pill';
-        pill.textContent = `🔥 ${syn}`;
-        this.el.previewSynergiesList.appendChild(pill);
-      });
-    }
+    preview.activeSynergies.slice(0, 2).forEach((syn) => {
+      const pill = document.createElement('span');
+      pill.className = 'synergy-pill';
+      // Keep synergy pill short
+      const shortSyn = syn.split('→')[0].trim();
+      pill.textContent = `🔥 ${shortSyn}`;
+      this.el.previewSynergiesList.appendChild(pill);
+    });
   }
 
   // ==========================================================================
