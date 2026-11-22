@@ -1203,7 +1203,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  padding: 8px;
   background: rgba(8, 10, 18, 0.85);
   backdrop-filter: blur(6px);
 }
@@ -1228,12 +1228,13 @@ html, body {
   z-index: 2;
   max-width: 980px;
   width: 100%;
-  max-height: 96dvh;
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
   background: rgba(16, 20, 32, 0.94);
   border: 3px solid var(--accent-gold);
   border-radius: 18px;
   padding: 14px 22px;
-  box-shadow: 0 12px 0 #000, 0 20px 50px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 10px 0 #000, 0 18px 44px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1270,7 +1271,7 @@ html, body {
 .logo-main {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(2.1rem, 4.2vw, 3.4rem);
+  font-size: clamp(2.0rem, 4.2vw, 3.4rem);
   color: var(--accent-gold);
   text-shadow: 4px 4px 0 var(--accent-red), 7px 7px 0 #000;
   line-height: 1.05;
@@ -1400,6 +1401,7 @@ html, body {
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .tutorial-arcade-btn {
@@ -1412,7 +1414,7 @@ html, body {
   font-weight: 900;
   font-size: 0.98rem;
   cursor: pointer;
-  box-shadow: 0 5px 0 #052e16, 0 8px 20px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 0 #052e16, 0 8px 20px rgba(34, 197, 94, 0.4);
   transition: transform 0.12s ease;
 }
 
@@ -1430,7 +1432,7 @@ html, body {
   font-weight: 900;
   font-size: 0.98rem;
   cursor: pointer;
-  box-shadow: 0 5px 0 #590514, 0 8px 20px rgba(255, 42, 75, 0.4);
+  box-shadow: 0 4px 0 #590514, 0 8px 20px rgba(255, 42, 75, 0.4);
   transition: transform 0.12s ease;
 }
 
@@ -1491,7 +1493,7 @@ html, body {
   gap: 6px;
 }
 
-/* MODAL PANELS */
+/* MODAL PANELS — SAFE SCROLL FALLBACK IF EVER NEEDED, COMPACT FOR SINGLE SCREEN */
 .modal-panel {
   background: var(--bg-panel-solid);
   border: 3px solid var(--accent-gold);
@@ -1499,8 +1501,8 @@ html, body {
   padding: 14px 18px;
   max-width: 980px;
   width: 100%;
-  max-height: 94dvh;
-  overflow: hidden;
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 0 #000, 0 20px 50px rgba(0, 0, 0, 0.85);
@@ -1526,15 +1528,15 @@ html, body {
 .modal-title {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 1.28rem;
+  font-size: 1.25rem;
   color: #fff;
 }
 
 .modal-desc {
   font-size: 0.8rem;
   color: #cbd5e1;
-  margin-bottom: 10px;
-  line-height: 1.38;
+  margin-bottom: 8px;
+  line-height: 1.35;
 }
 
 .modal-close-btn {
@@ -1547,7 +1549,7 @@ html, body {
   cursor: pointer;
 }
 
-/* PLAYER MANUAL MODAL (4 TABS, NO PAGE SCROLL) */
+/* PLAYER MANUAL MODAL (4 TABS) */
 .manual-header-actions {
   display: flex;
   align-items: center;
@@ -1606,29 +1608,29 @@ html, body {
   background: #1c2236;
   border: 2px solid #334155;
   border-radius: 12px;
-  padding: 11px 13px;
+  padding: 10px 12px;
   font-size: 0.78rem;
-  line-height: 1.42;
+  line-height: 1.4;
   color: #e2e8f0;
 }
 
 .manual-box h3 {
   font-family: var(--font-display);
-  font-size: 0.94rem;
+  font-size: 0.92rem;
   color: var(--accent-gold);
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .manual-flow-diagram {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 5px;
+  margin-top: 6px;
 }
 
 .flow-step {
   border-radius: 8px;
-  padding: 6px 9px;
+  padding: 5px 8px;
   border-left: 4px solid #fff;
   background: rgba(15, 23, 42, 0.75);
 }
@@ -1639,12 +1641,12 @@ html, body {
 
 .flow-step strong {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #fff;
 }
 
 .flow-step span {
-  font-size: 0.71rem;
+  font-size: 0.7rem;
   color: #cbd5e1;
 }
 
@@ -1652,14 +1654,14 @@ html, body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .manual-list li {
   background: rgba(15, 23, 42, 0.65);
   border-radius: 7px;
   padding: 5px 8px;
-  font-size: 0.74rem;
+  font-size: 0.73rem;
 }
 
 .manual-list li strong {
@@ -1676,8 +1678,8 @@ html, body {
 
 .manual-mini-card {
   border-radius: 8px;
-  padding: 7px 9px;
-  margin-top: 7px;
+  padding: 6px 8px;
+  margin-top: 6px;
   color: #0f172a;
   font-weight: 800;
 }
@@ -1696,8 +1698,8 @@ html, body {
   background: #fffbeb;
   border: 2px solid #111;
   border-radius: 8px;
-  padding: 8px;
-  margin-top: 8px;
+  padding: 7px;
+  margin-top: 6px;
 }
 
 .rp-old {
@@ -1705,15 +1707,15 @@ html, body {
   text-decoration-color: #ff0033;
   text-decoration-thickness: 2.5px;
   color: #64748b;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 800;
 }
 
 .rp-new {
   color: #d90429;
   font-weight: 900;
-  font-size: 0.82rem;
-  margin-top: 3px;
+  font-size: 0.8rem;
+  margin-top: 2px;
 }
 
 .recipe-box {
@@ -1724,7 +1726,7 @@ html, body {
   display: inline-block;
   background: var(--accent-red);
   color: #fff;
-  font-size: 0.65rem;
+  font-size: 0.64rem;
   font-weight: 900;
   padding: 1px 7px;
   border-radius: 99px;
@@ -1738,25 +1740,25 @@ html, body {
   font-weight: 900;
   padding: 4px 7px;
   border-radius: 6px;
-  margin-bottom: 6px;
-  font-size: 0.74rem;
+  margin-bottom: 5px;
+  font-size: 0.73rem;
 }
 
 /* ROUTE MAP NODES (COMPACT 5 STEPS ON ONE SCREEN) */
 .map-track-container {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .map-step-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.03);
   border: 1.5px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  padding: 6px 10px;
+  padding: 5px 8px;
 }
 
 .map-step-row.current-step {
@@ -1771,25 +1773,25 @@ html, body {
 .step-index-badge {
   font-family: var(--font-mono);
   font-weight: 900;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: var(--accent-gold);
-  min-width: 64px;
+  min-width: 58px;
 }
 
 .step-nodes-grid {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   flex-wrap: wrap;
 }
 
 .map-node-btn {
   flex: 1;
-  min-width: 180px;
+  min-width: 160px;
   background: #1e263b;
   border: 2px solid #3b486b;
-  border-radius: 9px;
-  padding: 6px 10px;
+  border-radius: 8px;
+  padding: 5px 8px;
   text-align: left;
   color: #fff;
   cursor: pointer;
@@ -1814,16 +1816,16 @@ html, body {
 .node-btn-top {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   color: var(--accent-gold);
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .node-btn-desc {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: #cbd5e1;
 }
 
@@ -1834,7 +1836,7 @@ html, body {
   color: #000;
   font-family: var(--font-mono);
   font-weight: 900;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   padding: 2px 9px;
   border-radius: 99px;
   margin-bottom: 4px;
@@ -1844,7 +1846,7 @@ html, body {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .reward-bonus-chip {
@@ -1852,30 +1854,30 @@ html, body {
   border: 2px solid #22c55e;
   color: #bbf7d0;
   font-weight: 900;
-  font-size: 0.78rem;
-  padding: 4px 10px;
+  font-size: 0.76rem;
+  padding: 4px 9px;
   border-radius: 8px;
 }
 
 .reward-section-title {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 900;
   color: var(--accent-cyan);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .reward-cards-grid {
   display: flex;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .reward-footer {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -1887,8 +1889,8 @@ html, body {
 }
 
 .redpen-modal-icon {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   border: 2px solid var(--accent-red);
   object-fit: cover;
@@ -1901,18 +1903,18 @@ html, body {
   padding: 4px 10px;
   border-radius: 99px;
   font-weight: 800;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   margin-right: 6px;
 }
 
 .redpen-workspace {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
-  gap: 14px;
+  gap: 12px;
 }
 
 .col-subtitle {
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 900;
   color: var(--accent-gold);
   margin-bottom: 6px;
@@ -1922,7 +1924,7 @@ html, body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  max-height: 360px;
+  max-height: 330px;
   overflow-y: auto;
   padding: 4px;
 }
@@ -1937,7 +1939,7 @@ html, body {
   background: #1e2538;
   border: 2px solid #ff2a4b;
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 8px 11px;
   text-align: left;
   color: #fff;
   cursor: pointer;
@@ -1957,13 +1959,13 @@ html, body {
 .redpen-opt-label {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   color: #fda4af;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .redpen-opt-detail {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: #e2e8f0;
 }
 
@@ -1977,7 +1979,7 @@ html, body {
 
 .rules-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 8px;
 }
 
@@ -1985,7 +1987,7 @@ html, body {
   background: #1c2236;
   border: 2px solid #334155;
   border-radius: 10px;
-  padding: 9px 11px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -2013,7 +2015,7 @@ html, body {
 .gameover-title {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 1.9rem;
+  font-size: 1.8rem;
   color: var(--accent-gold);
   margin-bottom: 8px;
 }
@@ -2040,30 +2042,30 @@ html, body {
 .stat-summary-val {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   color: var(--accent-gold);
 }
 
-/* SHORT DESKTOP / LAPTOP VIEWPORTS (MAX-HEIGHT: 800PX) — ZERO SCROLL FIT */
+/* SHORT DESKTOP / LAPTOP VIEWPORTS (MAX-HEIGHT: 800PX) */
 @media (max-height: 800px) {
   .card-slot {
-    height: 92px;
-    width: 128px;
+    height: 90px;
+    width: 126px;
   }
   .game-card {
-    height: 118px;
+    height: 114px;
     padding: 4px 6px;
   }
   .card-title {
-    font-size: 0.75rem;
+    font-size: 0.74rem;
   }
   .card-desc {
-    font-size: 0.59rem;
+    font-size: 0.58rem;
     line-height: 1.12;
   }
   .pile-indicator {
-    height: 74px;
-    width: 52px;
+    height: 72px;
+    width: 50px;
   }
   .combat-ui {
     gap: 3px;
@@ -2074,11 +2076,13 @@ html, body {
     gap: 7px;
   }
   .logo-main {
-    font-size: 2.2rem;
+    font-size: 2.1rem;
   }
 }
 
-/* RESPONSIVE ADJUSTMENTS (TABLET & MOBILE — NO SCROLL SINGLE SCREEN) */
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS (TABLET & MOBILE — FITS 100% ON 1 SCREEN & OPERABLE!)
+   ============================================================================ */
 @media (max-width: 960px) {
   .starter-selection,
   .manual-grid-2,
@@ -2092,52 +2096,268 @@ html, body {
   .redpen-workspace {
     grid-template-columns: 1fr;
   }
-  .title-howto-strip {
-    flex-direction: column;
-    gap: 4px;
-  }
-  .howto-arrow {
-    display: none;
-  }
 }
 
 @media (max-width: 640px) {
-  .top-bar {
+  .screen-overlay {
+    padding: 6px;
+  }
+
+  /* 1. TITLE SCREEN ON MOBILE: Compact so ALL 3 styles + ALL 4 start buttons fit in 1 screen (~580px) without scrolling! */
+  .title-content {
+    padding: 10px 12px;
+    gap: 6px;
+    border-radius: 14px;
+    max-height: calc(100dvh - 12px);
+  }
+  .foul-warning-tape {
+    font-size: 0.56rem;
+    padding: 2px 8px;
+  }
+  .logo-top {
+    font-size: 0.7rem;
+  }
+  .logo-main {
+    font-size: 1.85rem;
+    text-shadow: 3px 3px 0 var(--accent-red), 5px 5px 0 #000;
+  }
+  .logo-sub {
+    font-size: 0.56rem;
+  }
+  /* Horizontal 3-column mini strip on mobile instead of tall vertical stack! */
+  .title-howto-strip {
+    flex-direction: row;
+    padding: 4px 6px;
+    gap: 4px;
+  }
+  .howto-arrow {
+    display: inline;
+    font-size: 0.65rem;
+  }
+  .howto-step-chip {
+    padding: 3px 5px;
+    gap: 4px;
+    border-radius: 6px;
+  }
+  .howto-num {
+    width: 17px;
+    height: 17px;
+    font-size: 0.65rem;
+  }
+  .howto-step-chip strong {
+    font-size: 0.6rem;
+    line-height: 1.15;
+  }
+  .howto-step-chip small {
+    display: none;
+  }
+
+  /* Compact 3 starter style cards on mobile */
+  .starter-selection {
+    gap: 5px;
+  }
+  .starter-card {
+    padding: 5px 8px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .starter-card-title {
+    font-size: 0.76rem;
+    margin-bottom: 0;
+  }
+  .starter-card-desc {
+    font-size: 0.63rem;
+    line-height: 1.2;
+    margin-bottom: 1px;
+  }
+  .starter-card-rule {
+    font-size: 0.6rem;
+    padding: 1px 5px;
+  }
+
+  /* 2x2 Action Buttons Grid on mobile Title Screen so every button is big, visible, and immediately tappable! */
+  .title-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: 100%;
+  }
+  .tutorial-arcade-btn {
+    grid-column: 1 / -1;
+    padding: 8px 10px;
+    font-size: 0.84rem;
+  }
+  .primary-arcade-btn {
+    padding: 8px 8px;
+    font-size: 0.8rem;
+  }
+  .secondary-arcade-btn,
+  .manual-arcade-btn {
+    padding: 7px 6px;
+    font-size: 0.72rem;
+  }
+  .title-footer-bar {
+    padding-top: 5px;
+    font-size: 0.64rem;
+    gap: 4px;
+  }
+  .meta-records {
+    gap: 8px;
+  }
+
+  /* 2. MODALS (MANUAL, MAP, REWARD, RED PEN) ON MOBILE */
+  .modal-panel {
+    padding: 10px 12px;
+    border-radius: 14px;
+    max-height: calc(100dvh - 12px);
+  }
+  .modal-title {
+    font-size: 0.98rem;
+  }
+  .modal-desc {
+    font-size: 0.68rem;
+    margin-bottom: 6px;
+  }
+  .modal-close-btn {
+    padding: 3px 9px;
+    font-size: 0.72rem;
+  }
+  .manual-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+  .manual-tab-btn {
+    padding: 4px 6px;
+    font-size: 0.66rem;
+    text-align: center;
+  }
+  .manual-grid-2,
+  .manual-grid-3 {
+    gap: 6px;
+  }
+  .manual-box {
+    padding: 7px 9px;
+    font-size: 0.68rem;
+    line-height: 1.28;
+  }
+  .manual-box h3 {
+    font-size: 0.78rem;
+    margin-bottom: 3px;
+  }
+  .flow-step {
     padding: 3px 6px;
-    gap: 3px;
+  }
+  .flow-step strong {
+    font-size: 0.68rem;
+  }
+  .flow-step span {
+    font-size: 0.62rem;
+  }
+  .manual-list {
+    gap: 4px;
+  }
+  .manual-list li {
+    padding: 3px 6px;
+    font-size: 0.64rem;
+  }
+  .reward-cards-grid .game-card {
+    width: 104px;
+    height: 112px;
+  }
+  .mini-card-grid {
+    max-height: 165px;
+    gap: 5px;
+  }
+  .mini-card-grid .game-card {
+    width: 98px;
+    height: 96px;
+  }
+  .redpen-option-btn {
+    padding: 6px 8px;
+  }
+  .redpen-opt-label {
+    font-size: 0.74rem;
+  }
+  .redpen-opt-detail {
+    font-size: 0.65rem;
+  }
+  .map-step-row {
+    padding: 4px 6px;
+    gap: 6px;
+  }
+  .step-index-badge {
+    min-width: 48px;
+    font-size: 0.65rem;
+  }
+  .map-node-btn {
+    min-width: 115px;
+    padding: 4px 6px;
+  }
+  .node-btn-top {
+    font-size: 0.72rem;
+  }
+  .node-btn-desc {
+    font-size: 0.6rem;
+  }
+
+  /* 3. COMBAT SCREEN ON MOBILE */
+  .top-bar {
+    padding: 3px 5px;
+    gap: 2px;
   }
   .top-left-group,
-  .top-right-group,
-  .foul-rules-bar {
+  .top-right-group {
     gap: 3px;
+  }
+  .foul-rules-bar {
+    display: none;
   }
   .area-badge,
   .stat-pill,
-  .foul-rule-chip,
   .hud-btn,
   .hud-icon-btn {
     padding: 2px 5px;
-    font-size: 0.64rem;
+    font-size: 0.58rem;
   }
   .hp-bar-mini {
-    width: 30px;
-    height: 6px;
+    width: 24px;
+    height: 5px;
+  }
+  .pill-thumb {
+    width: 13px;
+    height: 13px;
   }
   .tutorial-banner {
-    top: 86px;
-    padding: 3px 8px;
-    gap: 6px;
-    width: calc(100vw - 12px);
+    top: 56px;
+    padding: 2px 6px;
+    gap: 4px;
+    width: calc(100vw - 10px);
+    border-width: 1.5px;
+    border-radius: 8px;
   }
   .tutorial-step-indicator {
-    font-size: 0.62rem;
-    padding: 2px 5px;
+    font-size: 0.56rem;
+    padding: 1px 4px;
   }
   .tutorial-title {
-    font-size: 0.7rem;
+    font-size: 0.62rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 190px;
   }
   .tutorial-subtext {
     display: none;
+  }
+  .tutorial-btn-mini,
+  .tutorial-close {
+    font-size: 0.56rem;
+    padding: 2px 5px;
   }
   .combat-ui {
     padding: 3px 5px 4px;
@@ -2154,26 +2374,26 @@ html, body {
     min-width: 0;
   }
   .slot-header {
-    font-size: 0.56rem;
+    font-size: 0.55rem;
     gap: 2px;
   }
   .slot-connector {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     padding: 0;
   }
   .card-slot {
     width: 100%;
-    height: 64px;
+    height: 60px;
   }
   .slot-placeholder {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
     padding: 2px;
   }
   .placeholder-icon {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
   .bare-punch-btn {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
     padding: 1px 3px;
     white-space: nowrap;
   }
@@ -2185,44 +2405,44 @@ html, body {
     min-width: 0;
   }
   .preview-formula {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
   .preview-total {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
   .synergy-pill {
-    font-size: 0.55rem;
+    font-size: 0.54rem;
     padding: 1px 4px;
   }
   .clear-slots-btn {
     padding: 3px 5px;
-    font-size: 0.62rem;
+    font-size: 0.6rem;
   }
   .fire-btn {
-    min-width: 88px;
+    min-width: 84px;
     padding: 4px 6px;
   }
   .fire-btn-sub {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
   }
   .fire-btn-main {
-    font-size: 0.96rem;
+    font-size: 0.92rem;
   }
   .hand-bar-wrapper {
     gap: 3px;
   }
   .pile-indicator {
-    width: 34px;
-    height: 112px;
+    width: 32px;
+    height: 106px;
   }
   .pile-icon {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
   .pile-label {
-    font-size: 0.5rem;
+    font-size: 0.48rem;
   }
   .pile-count {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
   }
   /* 3x2 grid on mobile so all 6 hand cards fit on 1 screen without horizontal scroll! */
   .hand-container {
@@ -2232,38 +2452,38 @@ html, body {
   }
   .game-card {
     max-width: none;
-    height: 76px;
-    padding: 3px 4px;
+    height: 72px;
+    padding: 2px 4px;
     border-width: 2px;
   }
   .card-type-badge {
-    font-size: 0.5rem;
-    padding: 0 4px;
+    font-size: 0.48rem;
+    padding: 0 3px;
   }
   .card-icon {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
   }
   .card-title {
-    font-size: 0.63rem;
+    font-size: 0.6rem;
   }
   .card-desc {
-    font-size: 0.52rem;
-    line-height: 1.06;
-    padding: 1px 3px;
+    font-size: 0.5rem;
+    line-height: 1.05;
+    padding: 1px 2px;
   }
   .card-footer-stats {
     display: none;
   }
   .enemy-hud-card {
-    min-width: 118px;
-    max-width: 146px;
-    padding: 3px 5px;
+    min-width: 114px;
+    max-width: 142px;
+    padding: 2px 5px;
   }
   .enemy-name-row {
-    font-size: 0.66rem;
+    font-size: 0.64rem;
   }
   .enemy-intent-row {
-    font-size: 0.58rem;
+    font-size: 0.56rem;
   }
   .enemy-passive-row {
     display: none;

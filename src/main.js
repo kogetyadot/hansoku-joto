@@ -802,10 +802,8 @@ class HansokuJotoApp {
           this.el.tutorialBanner &&
           !this.el.tutorialBanner.classList.contains('hidden')
         ) {
-          topBarBottom = Math.max(
-            topBarBottom,
-            this.el.tutorialBanner.getBoundingClientRect().bottom
-          );
+          this.el.tutorialBanner.style.top = `${Math.round(topBarBottom + 3)}px`;
+          topBarBottom = this.el.tutorialBanner.getBoundingClientRect().bottom;
         }
         const combatTop =
           this.el.combatUi && !this.el.combatUi.classList.contains('hidden')
@@ -813,16 +811,17 @@ class HansokuJotoApp {
             : window.innerHeight - 60;
 
         const isMobile = window.innerWidth <= 640;
-        const halfCardW = isMobile ? 68 : 96;
-        const minY = Math.max(95, topBarBottom + (isMobile ? 56 : 86));
-        const maxY = Math.max(minY + 20, combatTop - (isMobile ? 8 : 14));
+        const halfCardW = isMobile ? 60 : 96;
+        const cardH = isMobile ? 60 : 92;
+        const minY = Math.max(85, topBarBottom + cardH + 6);
+        const maxY = Math.max(minY + 16, combatTop - 8);
 
         const items = [];
         cards.forEach((cardEl) => {
           const id = cardEl.dataset.enemyId;
           const pos = screenMap[id];
           if (pos && pos.visible) {
-            const x = Math.max(halfCardW + 6, Math.min(window.innerWidth - halfCardW - 6, pos.x));
+            const x = Math.max(halfCardW + 4, Math.min(window.innerWidth - halfCardW - 4, pos.x));
             const y = Math.max(minY, Math.min(maxY, pos.y));
             items.push({ cardEl, x, y });
           } else {
@@ -830,25 +829,28 @@ class HansokuJotoApp {
           }
         });
 
-        // Anti-overlap pass so adjacent enemy HUD cards never cover each other!
+        // Multi-pass anti-overlap separation so enemy HUD cards are always cleanly readable!
         items.sort((a, b) => a.x - b.x);
-        const minSepX = isMobile ? 132 : 184;
-        const minSepY = isMobile ? 68 : 96;
+        const minSepX = isMobile ? 118 : 184;
+        const minSepY = isMobile ? 54 : 92;
 
-        for (let i = 1; i < items.length; i++) {
-          const prev = items[i - 1];
-          const curr = items[i];
-          const dx = curr.x - prev.x;
-          const dy = Math.abs(curr.y - prev.y);
-          if (dx < minSepX && dy < minSepY) {
-            // Spread horizontally & stagger vertically
-            const pushX = (minSepX - dx) * 0.55;
-            prev.x = Math.max(halfCardW + 6, prev.x - pushX);
-            curr.x = Math.min(window.innerWidth - halfCardW - 6, curr.x + pushX);
-            if (Math.abs(curr.x - prev.x) < minSepX * 0.85) {
-              // Also stagger Y if screen is narrow
-              prev.y = Math.max(minY, prev.y - 26);
-              curr.y = Math.min(maxY, curr.y + 26);
+        for (let pass = 0; pass < 2; pass++) {
+          for (let i = 0; i < items.length; i++) {
+            for (let j = i + 1; j < items.length; j++) {
+              const a = items[i];
+              const b = items[j];
+              const dx = b.x - a.x;
+              const dy = Math.abs(b.y - a.y);
+              if (dx < minSepX && dy < minSepY) {
+                const pushX = (minSepX - dx) * 0.55 + 6;
+                a.x = Math.max(halfCardW + 4, a.x - pushX);
+                b.x = Math.min(window.innerWidth - halfCardW - 4, b.x + pushX);
+                if (Math.abs(b.x - a.x) < minSepX * 0.85) {
+                  const midY = (a.y + b.y) * 0.5;
+                  a.y = Math.max(minY, midY - minSepY * 0.52);
+                  b.y = Math.min(maxY, midY + minSepY * 0.52);
+                }
+              }
             }
           }
         }
