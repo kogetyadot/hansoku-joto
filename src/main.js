@@ -41,6 +41,10 @@ class HansokuJotoApp {
     // Current shop inventory
     this.currentShopInventory = null;
 
+    // Guided Interactive Tutorial State
+    this.tutorialActive = false;
+    this.tutorialDismissed = false;
+
     this._initDOMRefs();
     this._initArena3D();
     this._bindEvents();
@@ -68,6 +72,8 @@ class HansokuJotoApp {
       hudDeckCount: document.getElementById('hud-deck-count'),
       hudRulesCount: document.getElementById('hud-rules-count'),
       btnOpenRedpen: document.getElementById('btn-open-redpen'),
+      btnOpenManualHud: document.getElementById('btn-open-manual-hud'),
+      btnStartTutorialHud: document.getElementById('btn-start-tutorial-hud'),
       btnDeckView: document.getElementById('btn-deck-view'),
       btnRulesManage: document.getElementById('btn-rules-manage'),
       btnSpeedToggle: document.getElementById('btn-speed-toggle'),
@@ -85,7 +91,10 @@ class HansokuJotoApp {
 
       // Tutorial banner
       tutorialBanner: document.getElementById('tutorial-banner'),
+      tutorialStepBadge: document.getElementById('tutorial-step-badge'),
+      tutorialTitle: document.getElementById('tutorial-title'),
       tutorialText: document.getElementById('tutorial-text'),
+      btnTutorialManual: document.getElementById('btn-tutorial-manual'),
       btnCloseTutorial: document.getElementById('btn-close-tutorial'),
 
       // Combat bottom UI
@@ -110,13 +119,21 @@ class HansokuJotoApp {
       // Title screen
       titleScreen: document.getElementById('title-screen'),
       starterSelection: document.getElementById('starter-selection'),
+      btnStartTutorialRun: document.getElementById('btn-start-tutorial-run'),
       btnStartRun: document.getElementById('btn-start-run'),
       btnQuickDemoCombo: document.getElementById('btn-quick-demo-combo'),
+      btnOpenManualTitle: document.getElementById('btn-open-manual-title'),
       recordMaxCombo: document.getElementById('record-max-combo'),
       recordMaxDmg: document.getElementById('record-max-dmg'),
       recordWins: document.getElementById('record-wins'),
       btnTitleBgm: document.getElementById('btn-title-bgm'),
       btnTitleSfx: document.getElementById('btn-title-sfx'),
+
+      // Manual modal
+      manualModal: document.getElementById('manual-modal'),
+      manualTabs: document.getElementById('manual-tabs'),
+      btnManualStartTutorial: document.getElementById('btn-manual-start-tutorial'),
+      btnCloseManual: document.getElementById('btn-close-manual'),
 
       // Map screen
       mapScreen: document.getElementById('map-screen'),
@@ -125,6 +142,7 @@ class HansokuJotoApp {
       mapAreaDesc: document.getElementById('map-area-desc'),
       mapRedpenCount: document.getElementById('map-redpen-count'),
       mapTrackContainer: document.getElementById('map-track-container'),
+      btnMapManual: document.getElementById('btn-map-manual'),
       btnMapRedpen: document.getElementById('btn-map-redpen'),
       btnMapRules: document.getElementById('btn-map-rules'),
       btnMapDeck: document.getElementById('btn-map-deck'),
@@ -185,15 +203,81 @@ class HansokuJotoApp {
 
   _bindEvents() {
     // Start Run buttons
+    if (this.el.btnStartTutorialRun) {
+      this.el.btnStartTutorialRun.addEventListener('click', () => {
+        sound.playLaunch();
+        this.tutorialActive = true;
+        this.tutorialDismissed = false;
+        this.startNewRun(this.selectedLoadoutId, false, true);
+      });
+    }
+
     this.el.btnStartRun.addEventListener('click', () => {
       sound.playLaunch();
-      this.startNewRun(this.selectedLoadoutId, false);
+      this.tutorialActive = true;
+      this.tutorialDismissed = false;
+      this.startNewRun(this.selectedLoadoutId, false, false);
     });
 
     this.el.btnQuickDemoCombo.addEventListener('click', () => {
       sound.playLaunch();
-      this.startNewRun(this.selectedLoadoutId, true);
+      this.tutorialActive = true;
+      this.tutorialDismissed = false;
+      this.startNewRun(this.selectedLoadoutId, true, false);
     });
+
+    // Player Manual (説明書) Modal handlers
+    const openManual = () => {
+      sound.playCardSelect();
+      this.openManualModal();
+    };
+    if (this.el.btnOpenManualTitle) this.el.btnOpenManualTitle.addEventListener('click', openManual);
+    if (this.el.btnOpenManualHud) this.el.btnOpenManualHud.addEventListener('click', openManual);
+    if (this.el.btnMapManual) this.el.btnMapManual.addEventListener('click', openManual);
+    if (this.el.btnTutorialManual) this.el.btnTutorialManual.addEventListener('click', openManual);
+
+    if (this.el.btnCloseManual) {
+      this.el.btnCloseManual.addEventListener('click', () => {
+        sound.playCardSelect();
+        this.el.manualModal.classList.add('hidden');
+      });
+    }
+
+    if (this.el.btnManualStartTutorial) {
+      this.el.btnManualStartTutorial.addEventListener('click', () => {
+        sound.playLaunch();
+        this.el.manualModal.classList.add('hidden');
+        this.tutorialActive = true;
+        this.tutorialDismissed = false;
+        if (!this.combat || this.combat.isBattleOver) {
+          this.startNewRun(this.selectedLoadoutId, false, true);
+        } else {
+          this._updateTutorialGuide();
+        }
+      });
+    }
+
+    if (this.el.manualTabs) {
+      const tabBtns = this.el.manualTabs.querySelectorAll('.manual-tab-btn');
+      tabBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          sound.playCardSelect();
+          const targetId = btn.dataset.tab;
+          tabBtns.forEach((b) => b.classList.toggle('active', b === btn));
+          const contents = this.el.manualModal.querySelectorAll('.manual-tab-content');
+          contents.forEach((c) => c.classList.toggle('active', c.id === targetId));
+        });
+      });
+    }
+
+    if (this.el.btnStartTutorialHud) {
+      this.el.btnStartTutorialHud.addEventListener('click', () => {
+        sound.playCardSelect();
+        this.tutorialActive = true;
+        this.tutorialDismissed = false;
+        this._updateTutorialGuide();
+      });
+    }
 
     // Audio toggles
     const syncAudioBtns = () => {
@@ -233,7 +317,10 @@ class HansokuJotoApp {
 
     // Close tutorial
     this.el.btnCloseTutorial.addEventListener('click', () => {
+      this.tutorialActive = false;
+      this.tutorialDismissed = true;
       this.el.tutorialBanner.classList.add('hidden');
+      this._clearTutorialHighlights();
     });
 
     // Bare punch button & slot click handlers
@@ -369,8 +456,92 @@ class HansokuJotoApp {
     });
   }
 
-  startNewRun(loadoutId = 'brawler', boostedDemo = false) {
+  openManualModal() {
+    if (this.el.manualModal) {
+      this.el.manualModal.classList.remove('hidden');
+    }
+  }
+
+  _clearTutorialHighlights() {
+    document.querySelectorAll('.tutorial-highlight-pulse').forEach((el) => {
+      el.classList.remove('tutorial-highlight-pulse');
+    });
+  }
+
+  _updateTutorialGuide() {
+    this._clearTutorialHighlights();
+
+    if (!this.tutorialActive || this.tutorialDismissed || !this.combat || this.combat.isBattleOver) {
+      if (this.el.tutorialBanner) this.el.tutorialBanner.classList.add('hidden');
+      return;
+    }
+
+    this.el.tutorialBanner.classList.remove('hidden');
+
+    const hasAction = Boolean(this.slottedActionCard);
+    const slottedModsCount = this.slottedModCards.filter(Boolean).length;
+    const handCards = Array.from(this.el.handContainer.querySelectorAll('.game-card:not(.selected-in-hand)'));
+    const handActions = handCards.filter((el) => el.classList.contains('action-card'));
+    const handMods = handCards.filter((el) => el.classList.contains('mod-card'));
+
+    if (!hasAction && handActions.length > 0) {
+      // STEP 1: Choose an Action Card
+      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 1 / 4';
+      if (this.el.tutorialTitle) {
+        this.el.tutorialTitle.textContent = '① 下の手札から【行動カード（黄色）】を1枚クリック！';
+      }
+      if (this.el.tutorialText) {
+        this.el.tutorialText.textContent =
+          '黄色いカードが「攻撃や防御の土台」になります。光っている黄色いカードをクリックして STEP 1 にセットしましょう！';
+      }
+      handActions.forEach((el) => el.classList.add('tutorial-highlight-pulse'));
+    } else if (slottedModsCount === 0 && handMods.length > 0) {
+      // STEP 2: Attach 1st Mod Card
+      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 2 / 4';
+      if (this.el.tutorialTitle) {
+        this.el.tutorialTitle.textContent = '② 次に【改変カード（青色）】を1枚クリックして重ねよう！';
+      }
+      if (this.el.tutorialText) {
+        this.el.tutorialText.textContent =
+          '青いカードを重ねると「3連発」「誘爆」「全体攻撃化」など技のルールが魔改造されます！';
+      }
+      handMods.forEach((el) => el.classList.add('tutorial-highlight-pulse'));
+    } else if (slottedModsCount === 1 && handMods.length > 0) {
+      // STEP 3: Attach 2nd Mod Card
+      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 3 / 4';
+      if (this.el.tutorialTitle) {
+        this.el.tutorialTitle.textContent = '③ もう1枚【改変カード（青色）】を重ねてコンボを完成させよう！';
+      }
+      if (this.el.tutorialText) {
+        this.el.tutorialText.textContent =
+          '改変カードは2枚まで合成できます！（例：3連発 × 誘爆 ＝ 3連続で全体爆発！）';
+      }
+      handMods.forEach((el) => el.classList.add('tutorial-highlight-pulse'));
+    } else {
+      // STEP 4: Press FIRE!
+      if (this.el.tutorialStepBadge) this.el.tutorialStepBadge.textContent = 'STEP 4 / 4';
+      if (this.el.tutorialTitle) {
+        this.el.tutorialTitle.textContent = '④ コンボ予測を確認して、右下の『🔥 発射！』ボタンを押そう！';
+      }
+      if (this.el.tutorialText) {
+        this.el.tutorialText.textContent =
+          '『🔥 発射！』を押すと改造コンボと上部の「反則ルール（死体爆弾など）」が連鎖して敵を吹き飛ばします！（上の「赤ペン改造」もいつでも使えます）';
+      }
+      if (this.el.btnFireCombo) {
+        this.el.btnFireCombo.classList.add('tutorial-highlight-pulse');
+      }
+    }
+  }
+
+  startNewRun(loadoutId = 'brawler', boostedDemo = false, isGuidedTutorial = false) {
     this.runState = new RunState(loadoutId);
+
+    if (isGuidedTutorial) {
+      // Guided Tutorial ensures a super clear, fun first hand and +2 Red Pens to experiment with!
+      this.runState.redPens = Math.max(2, this.runState.redPens + 1);
+      this.tutorialActive = true;
+      this.tutorialDismissed = false;
+    }
 
     if (boostedDemo) {
       // Boosted Demo Mode: starts with extra Red Pens, both Death Chain + Blast Shield / Chain Scaling rules, and extra Explosive mods!
@@ -410,6 +581,7 @@ class HansokuJotoApp {
     this.el.combatUi.classList.add('hidden');
     this.el.rewardScreen.classList.add('hidden');
     this.el.tutorialBanner.classList.add('hidden');
+    this._clearTutorialHighlights();
     this.el.enemyHudLayer.innerHTML = '';
 
     this._updateTopHud();
@@ -522,10 +694,8 @@ class HansokuJotoApp {
     this.el.rewardScreen.classList.add('hidden');
     this.el.combatUi.classList.remove('hidden');
 
-    if (this.runState.stats.floorsCleared === 0) {
-      this.el.tutorialBanner.classList.remove('hidden');
-      this.el.tutorialText.textContent =
-        '💡 反則指南：①手札の【行動カード(黄)】をクリック → ②【改変カード(青)】を2枚まで重ねる → ③『🔥発射！』で連鎖爆発！！';
+    if (this.runState.stats.floorsCleared === 0 && !this.tutorialDismissed) {
+      this.tutorialActive = true;
     }
 
     if (node.type === 'boss') {
@@ -627,7 +797,16 @@ class HansokuJotoApp {
         const screenMap = this.arena.getEnemyScreenPositions();
         const cards = Array.from(this.el.enemyHudLayer.querySelectorAll('.enemy-hud-card'));
 
-        const topBarBottom = this.el.topBar ? this.el.topBar.getBoundingClientRect().bottom : 58;
+        let topBarBottom = this.el.topBar ? this.el.topBar.getBoundingClientRect().bottom : 58;
+        if (
+          this.el.tutorialBanner &&
+          !this.el.tutorialBanner.classList.contains('hidden')
+        ) {
+          topBarBottom = Math.max(
+            topBarBottom,
+            this.el.tutorialBanner.getBoundingClientRect().bottom
+          );
+        }
         const combatTop =
           this.el.combatUi && !this.el.combatUi.classList.contains('hidden')
             ? this.el.combatUi.getBoundingClientRect().top
@@ -635,7 +814,7 @@ class HansokuJotoApp {
 
         const isMobile = window.innerWidth <= 640;
         const halfCardW = isMobile ? 68 : 96;
-        const minY = Math.max(95, topBarBottom + (isMobile ? 68 : 105));
+        const minY = Math.max(95, topBarBottom + (isMobile ? 56 : 86));
         const maxY = Math.max(minY + 20, combatTop - (isMobile ? 8 : 14));
 
         const items = [];
@@ -788,6 +967,7 @@ class HansokuJotoApp {
     this.el.hudDiscardCount.textContent = rs.discardPile.length;
 
     this._updateComboPreview();
+    this._updateTutorialGuide();
   }
 
   _handleHandCardClick(card) {
@@ -927,6 +1107,7 @@ class HansokuJotoApp {
     this.skipRequested = false;
     this.el.btnFireCombo.disabled = true;
     this.el.tutorialBanner.classList.add('hidden');
+    this._clearTutorialHighlights();
 
     const activeMods = this.slottedModCards.slice(0, this.runState.maxModSlots).filter(Boolean);
     const chosenAction = this.slottedActionCard;

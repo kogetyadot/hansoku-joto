@@ -25,20 +25,20 @@
         <div class="top-left-group">
           <div class="area-badge" id="hud-area-badge">
             <span class="area-label">AREA 1</span>
-            <span class="node-label" id="hud-node-name">第1戦</span>
+            <span class="node-label" id="hud-node-name">STEP 1/5</span>
           </div>
-          <div class="stat-pill hp-pill" id="hud-hp-pill" title="プレイヤーの体力">
+          <div class="stat-pill hp-pill" id="hud-hp-pill" title="プレイヤーの体力 (0になると敗北)">
             <span class="stat-icon">❤️</span>
             <div class="hp-bar-mini">
               <div class="hp-bar-fill" id="hud-hp-fill" style="width: 100%"></div>
             </div>
             <span class="stat-val" id="hud-hp-text">60 / 60</span>
           </div>
-          <div class="stat-pill guard-pill" id="hud-guard-pill" title="現在のガード値（敵の攻撃を軽減）">
+          <div class="stat-pill guard-pill" id="hud-guard-pill" title="現在のガード値（敵の攻撃ダメージを軽減）">
             <span class="stat-icon">🛡️</span>
             <span class="stat-val" id="hud-guard-text">0</span>
           </div>
-          <div class="stat-pill gold-pill" id="hud-gold-pill" title="所持ゴールド">
+          <div class="stat-pill gold-pill" id="hud-gold-pill" title="所持ゴールド（ショップやカード削除で使用）">
             <span class="stat-icon">🪙</span>
             <span class="stat-val" id="hud-gold-text">50G</span>
           </div>
@@ -55,13 +55,19 @@
         </div>
 
         <div class="top-right-group">
+          <button id="btn-open-manual-hud" class="hud-btn manual-accent-btn" title="遊び方・コンボの組み方・説明書を開く">
+            📖 遊び方
+          </button>
+          <button id="btn-start-tutorial-hud" class="hud-btn tutorial-accent-btn" title="ステップ順の操作ガイドを再表示">
+            🎓 ガイド
+          </button>
           <button id="btn-deck-view" class="hud-btn" title="現在の山札・捨て札・デッキ一覧を確認">
-            📚 デッキ (<span id="hud-deck-count">10</span>)
+            📚 デッキ(<span id="hud-deck-count">10</span>)
           </button>
           <button id="btn-rules-manage" class="hud-btn" title="装備中の反則ルールを確認・変更">
-            ⚠️ 反則枠 (<span id="hud-rules-count">1/2</span>)
+            ⚠️ 反則(<span id="hud-rules-count">1/2</span>)
           </button>
-          <button id="btn-speed-toggle" class="hud-btn speed-btn" title="演出スピード切替 (1x / 2x / SKIP)">
+          <button id="btn-speed-toggle" class="hud-btn speed-btn" title="演出スピード切替 (1x / 2x / 爆速)">
             ⚡ 1x
           </button>
           <button id="btn-bgm-toggle" class="hud-icon-btn" title="BGM オン/オフ">🎵</button>
@@ -79,7 +85,7 @@
           TOTAL <span id="combo-total-dmg" class="combo-dmg-num">0</span> DMG
         </div>
         <div id="combo-active-rule-toast" class="combo-rule-toast"></div>
-        <button id="btn-skip-playback" class="skip-playback-btn">⏭️ 演出スキップ</button>
+        <button id="btn-skip-playback" class="skip-playback-btn">⏭️ スキップ</button>
       </div>
 
       <!-- Boss Cut-In Dramatic Announcement Banner -->
@@ -91,11 +97,17 @@
         </div>
       </div>
 
-      <!-- Tutorial / Dynamic Coach Tip Banner -->
+      <!-- Interactive Step-by-Step Tutorial Coach Bar -->
       <div id="tutorial-banner" class="tutorial-banner hidden">
-        <span class="tutorial-badge">💡 反則指南</span>
-        <span id="tutorial-text">① 手札から【行動カード】を選ぶ → ②【改変カード】を重ねる → ③『発射！』で超連鎖スタート！</span>
-        <button id="btn-close-tutorial" class="tutorial-close" aria-label="閉じる">✕</button>
+        <div class="tutorial-step-indicator" id="tutorial-step-badge">STEP 1 / 4</div>
+        <div class="tutorial-main-body">
+          <strong id="tutorial-title" class="tutorial-title">① 手札から【行動カード(黄色)】を1枚選ぼう！</strong>
+          <span id="tutorial-text" class="tutorial-subtext">一番下のカード列にある黄色いカードをクリックすると、STEP 1（行動ベース）にセットされます。</span>
+        </div>
+        <div class="tutorial-actions">
+          <button id="btn-tutorial-manual" class="tutorial-btn-mini" title="詳しい説明書を開く">📖 説明書</button>
+          <button id="btn-close-tutorial" class="tutorial-close" title="ガイドを閉じる">✕ 閉じる</button>
+        </div>
       </div>
 
       <!-- Combat Bottom UI: Assembly Dock + Preview + Hand -->
@@ -104,10 +116,10 @@
         <div class="assembly-wrapper">
           <div class="assembly-dock" id="assembly-dock">
             <!-- Action Slot -->
-            <div class="slot-group">
+            <div class="slot-group" id="slot-group-action">
               <div class="slot-header">
                 <span class="slot-step">STEP 1</span>
-                <span class="slot-title">行動ベース</span>
+                <span class="slot-title">行動(黄) 1枚</span>
               </div>
               <div id="slot-action" class="card-slot action-slot" data-slot-type="action">
                 <div class="slot-placeholder">
@@ -116,22 +128,22 @@
                 </div>
               </div>
               <button id="btn-use-bare-punch" class="bare-punch-btn active" title="手札の行動カードを使わず、常時使える素手パンチ(4DMG)をベースにします">
-                👊 素手パンチ (常時使用可)
+                👊 素手パンチ (常時可)
               </button>
             </div>
 
             <div class="slot-connector">✖</div>
 
             <!-- Mod Slot 1 -->
-            <div class="slot-group">
+            <div class="slot-group" id="slot-group-mod-0">
               <div class="slot-header">
                 <span class="slot-step">STEP 2</span>
-                <span class="slot-title">ルール改変 ①</span>
+                <span class="slot-title">改変(青) ①</span>
               </div>
               <div id="slot-mod-0" class="card-slot mod-slot" data-slot-type="mod" data-mod-index="0">
                 <div class="slot-placeholder">
                   <span class="placeholder-icon">⚡</span>
-                  <span class="placeholder-text">改変カードを重ねる<br><small>(クリックで装着/解除)</small></span>
+                  <span class="placeholder-text">改変カードを重ねる<br><small>(クリックで解除)</small></span>
                 </div>
               </div>
             </div>
@@ -139,15 +151,15 @@
             <div class="slot-connector">✖</div>
 
             <!-- Mod Slot 2 -->
-            <div class="slot-group">
+            <div class="slot-group" id="slot-group-mod-1">
               <div class="slot-header">
                 <span class="slot-step">STEP 3</span>
-                <span class="slot-title">ルール改変 ②</span>
+                <span class="slot-title">改変(青) ②</span>
               </div>
               <div id="slot-mod-1" class="card-slot mod-slot" data-slot-type="mod" data-mod-index="1">
                 <div class="slot-placeholder">
                   <span class="placeholder-icon">💥</span>
-                  <span class="placeholder-text">改変カードを重ねる<br><small>(最大2枚まで合成!)</small></span>
+                  <span class="placeholder-text">改変カードを重ねる<br><small>(最大2枚合成!)</small></span>
                 </div>
               </div>
             </div>
@@ -156,7 +168,7 @@
             <div class="slot-group hidden" id="slot-group-mod-2">
               <div class="slot-header">
                 <span class="slot-step">EX</span>
-                <span class="slot-title">反則拡張枠 ③</span>
+                <span class="slot-title">拡張枠 ③</span>
               </div>
               <div id="slot-mod-2" class="card-slot mod-slot" data-slot-type="mod" data-mod-index="2">
                 <div class="slot-placeholder">
@@ -168,7 +180,7 @@
           </div>
 
           <!-- Live Combo Formula Preview & Launch Button -->
-          <div class="launch-panel">
+          <div class="launch-panel" id="launch-panel">
             <div class="preview-box" id="combo-preview-box">
               <div class="preview-header">
                 <span class="preview-tag">コンボ予測</span>
@@ -184,7 +196,7 @@
 
             <div class="launch-controls">
               <button id="btn-clear-slots" class="clear-slots-btn" title="セットしたカードを手札に戻す">
-                ↩ リセット
+                ↩ 戻す
               </button>
               <button id="btn-fire-combo" class="fire-btn">
                 <span class="fire-btn-sub">反則コンボ発動！</span>
@@ -229,10 +241,32 @@
             <span class="logo-sub">HANSOKU JOTO! - BREAK THE RULES</span>
           </h1>
 
-          <p class="title-lead">
-            「4ダメージのパンチ」に【3連発】と【誘爆】を重ね、【死体爆弾ルール】で敵全体を連鎖爆破せよ！<br>
-            考えている間は緻密な戦略ゲーム、<strong>『発射！』を押した瞬間はド派手な超連鎖バカゲー！</strong>
-          </p>
+          <!-- Quick 3-Step Visual Cheat Sheet on Title Screen -->
+          <div class="title-howto-strip">
+            <div class="howto-step-chip">
+              <span class="howto-num">1</span>
+              <div>
+                <strong>行動カード(黄)を選ぶ</strong>
+                <small>攻撃やガードの土台をセット</small>
+              </div>
+            </div>
+            <span class="howto-arrow">▶</span>
+            <div class="howto-step-chip">
+              <span class="howto-num">2</span>
+              <div>
+                <strong>改変カード(青)を重ねる</strong>
+                <small>「3連発」「誘爆」「全体化」を合成</small>
+              </div>
+            </div>
+            <span class="howto-arrow">▶</span>
+            <div class="howto-step-chip">
+              <span class="howto-num">3</span>
+              <div>
+                <strong>『🔥発射！』で超連鎖！</strong>
+                <small>赤ペン改造＆反則ルールで敵が爆散</small>
+              </div>
+            </div>
+          </div>
 
           <!-- Starter Style Picker -->
           <div class="starter-selection" id="starter-selection">
@@ -240,23 +274,221 @@
           </div>
 
           <div class="title-actions">
+            <button id="btn-start-tutorial-run" class="tutorial-arcade-btn" title="初めての方におすすめ！1手ずつハイライト付きでコンボと赤ペン改造を体験します">
+              🎓 チュートリアルで遊び方を体験 (初回おすすめ)
+            </button>
             <button id="btn-start-run" class="primary-arcade-btn">
-              🚀 反則バトル開始！ (START RUN)
+              🚀 通常バトル開始
             </button>
             <button id="btn-quick-demo-combo" class="secondary-arcade-btn" title="最初から強力な改変カードと赤ペンを持った状態で大連鎖を体験します">
-              💥 超連鎖体験モードで開始 (BOOSTED START)
+              💥 超連鎖ブースト開始
+            </button>
+            <button id="btn-open-manual-title" class="manual-arcade-btn">
+              📖 遊び方・説明書を読む
             </button>
           </div>
 
           <div class="title-footer-bar">
             <div class="meta-records" id="title-meta-records">
-              <span>🏆 最高連鎖記録: <strong id="record-max-combo">0</strong> CHAIN</span>
-              <span>💥 最大1ターンダメージ: <strong id="record-max-dmg">0</strong> DMG</span>
-              <span>👑 制覇回数: <strong id="record-wins">0</strong> 回</span>
+              <span>🏆 最高連鎖: <strong id="record-max-combo">0</strong> CHAIN</span>
+              <span>💥 最大1ターン威力: <strong id="record-max-dmg">0</strong> DMG</span>
+              <span>👑 制覇: <strong id="record-wins">0</strong> 回</span>
             </div>
             <div class="title-audio-controls">
               <button id="btn-title-bgm" class="hud-btn">🎵 BGM: ON</button>
               <button id="btn-title-sfx" class="hud-btn">🔊 SE: ON</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- USER MANUAL / HOW TO PLAY MODAL (ユーザー向け説明書) -->
+      <section id="manual-modal" class="screen-overlay hidden">
+        <div class="modal-panel manual-panel">
+          <div class="modal-header">
+            <div>
+              <span class="modal-kicker">OFFICIAL RULEBOOK // 公式プレイヤーズマニュアル</span>
+              <h2 class="modal-title">📖 『反則上等！』遊び方・超連鎖ガイド</h2>
+            </div>
+            <div class="manual-header-actions">
+              <button id="btn-manual-start-tutorial" class="hud-btn tutorial-accent-btn">
+                🎓 実践チュートリアルを開始する
+              </button>
+              <button id="btn-close-manual" class="modal-close-btn">✕ 閉じる</button>
+            </div>
+          </div>
+
+          <!-- Manual Tab Bar (Switches without page scrolling!) -->
+          <div class="manual-tabs" id="manual-tabs">
+            <button class="manual-tab-btn active" data-tab="tab-basics">① 基本の遊び方 (1ターン)</button>
+            <button class="manual-tab-btn" data-tab="tab-cards">② カード・赤ペン・反則ルール</button>
+            <button class="manual-tab-btn" data-tab="tab-combos">③ おすすめ反則コンボレシピ</button>
+            <button class="manual-tab-btn" data-tab="tab-enemies">④ 敵の対策＆エリア進行</button>
+          </div>
+
+          <!-- Tab 1: Basics -->
+          <div class="manual-tab-content active" id="tab-basics">
+            <div class="manual-grid-2">
+              <div class="manual-box">
+                <h3>🎯 ゲームの目的</h3>
+                <p>
+                  最初は「4〜6ダメージのパンチ」のような普通の技しかありません。<br>
+                  しかし、<strong>攻撃回数を増やし、命中時に爆発を起こし、撃破時の追加攻撃や反則ルールを絡める</strong>ことで、1回の発射から<strong>数十ヒットの異常な大連鎖</strong>を引き起こして敵を全滅させるゲームです！
+                </p>
+                <div class="manual-flow-diagram">
+                  <div class="flow-step yellow">
+                    <strong>STEP 1：行動カード（黄色）を1枚選ぶ</strong>
+                    <span>「剛腕パンチ」「マシンガン連射」「鉄壁ガード」など基本技をセット！（手札になくても「素手パンチ」が常時使えます）</span>
+                  </div>
+                  <div class="flow-step blue">
+                    <strong>STEP 2 & 3：改変カード（青色）を最大2枚重ねる</strong>
+                    <span>「3連発（回数+2）」「誘爆（命中時全体爆発）」「おすそわけ（全体攻撃化）」などを重ねて技の性質を魔改造！</span>
+                  </div>
+                  <div class="flow-step red">
+                    <strong>FINISH：『🔥 発射！』ボタンを押す！</strong>
+                    <span>完成した改造コンボが炸裂！撃破後に生き残った敵が反撃してきます。敵のHPを全員0にすれば勝利！</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="manual-box">
+                <h3>画面の見方・操作のコツ</h3>
+                <ul class="manual-list">
+                  <li>
+                    <strong>🎯 ターゲット変更：</strong>
+                    3Dの敵キャラクター、または敵の頭上にあるHPパネルをクリックすると狙う敵（<span class="inline-badge red">TARGET</span>）を切り替えられます。
+                  </li>
+                  <li>
+                    <strong>🔮 コンボ予測パネル：</strong>
+                    発射ボタンの左側に「何ダメージ×何回＝合計何ダメージになるか」「どのシナジーが発動するか」が発射前にリアルタイム表示されます。
+                  </li>
+                  <li>
+                    <strong>↩ カードの付け替え：</strong>
+                    STEP 1〜3 のスロットに入れたカードをクリックするか「↩ 戻す」を押すと、いつでも手札に戻して組み直せます。
+                  </li>
+                  <li>
+                    <strong>⚡ 演出スピード切替：</strong>
+                    画面右上の「⚡ 1x」ボタンで「2x」「爆速」に切り替えたり、発射中の「⏭️ スキップ」で長い連鎖を高速処理できます。
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Cards, Red Pen & Foul Rules -->
+          <div class="manual-tab-content" id="tab-cards">
+            <div class="manual-grid-3">
+              <div class="manual-box">
+                <h3>🟡 行動カード と 🔵 改変カード</h3>
+                <p>デッキには2種類のカードが入っています。</p>
+                <div class="manual-mini-card yellow">
+                  <strong>🟡 行動カード（1ターンに1枚）</strong>
+                  <p>攻撃や防御のベースになるカード。「何を撃つか」を決めます。</p>
+                </div>
+                <div class="manual-mini-card blue">
+                  <strong>🔵 改変カード（1ターンに2〜3枚）</strong>
+                  <p>行動カードにトッピングする強化パーツ。「何回撃つか」「対象を全員にするか」「爆発を付けるか」を書き換えます。</p>
+                </div>
+              </div>
+
+              <div class="manual-box">
+                <h3>🖍️ 赤ペン改造（永続ルール書き換え）</h3>
+                <p>
+                  画面上の<strong>「赤ペン改造」ボタン</strong>（またはマップの赤ペン教室）で、所持している赤ペンを使ってカードのテキストを<strong>そのランの間ずっと永続書き換え</strong>できます！
+                </p>
+                <div class="manual-redpen-example">
+                  <div class="rp-old">敵1体に6ダメージ</div>
+                  <div class="rp-new">🖍️ 敵全員に8ダメージ！【全員殴打！】</div>
+                </div>
+                <p style="margin-top:8px;font-size:0.78rem;color:#fde047;">
+                  ※ 1枚のカードに3種類の改造ルートがあります。よく使う主力カードや「3連発」「誘爆」を赤ペンで魔改造するのが勝利のカギ！
+                </p>
+              </div>
+
+              <div class="manual-box">
+                <h3>⚠️ 反則ルール（戦場パッシブ能力）</h3>
+                <p>
+                  画面上部の中央に表示されているのが<strong>装備中の反則ルール</strong>（初期2枠、ショップで3枠に拡張可）です。カードを使わなくても自動で連鎖を引き起こします！
+                </p>
+                <ul class="manual-list compact">
+                  <li><strong>💀 死体爆弾ルール：</strong>敵が1体死ぬたび、他の敵全員に7ダメージ爆発！</li>
+                  <li><strong>📈 連撃インフレ：</strong>攻撃や爆発が当たるたび、そのターンの全ダメージが+2ずつ急上昇！</li>
+                  <li><strong>⚡ 余剰ダメージ転嫁：</strong>敵のHPを超えたオーバーキル分のダメージを別の敵に100%雷撃転送！</li>
+                  <li><strong>🛡️ 爆風バリア / 要塞砲撃：</strong>爆発するたびガード獲得、ガードを得るたび自動砲撃！</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Recommended Combo Recipes -->
+          <div class="manual-tab-content" id="tab-combos">
+            <div class="manual-grid-3">
+              <div class="manual-box recipe-box">
+                <span class="recipe-tag">王道・画面全滅コンボ</span>
+                <h3>💥 連打 × 誘爆 × 死体爆弾</h3>
+                <p class="recipe-formula">【マシンガン連射】＋【3連発】＋【誘爆】</p>
+                <p>
+                  攻撃回数を5〜6回に増やし、<strong>1ヒットごとに「誘爆（全体爆発）」</strong>を発生させます。<br>
+                  最初の雑魚が1体死んだ瞬間、反則ルール<strong>『死体爆弾』</strong>が発動してさらに全体爆発！ボスのHPも巻き添えで一気に溶けます。
+                </p>
+              </div>
+
+              <div class="manual-box recipe-box">
+                <span class="recipe-tag">無限追撃・殲滅コンボ</span>
+                <h3>🍖 大振り × おかわり × 余剰転嫁</h3>
+                <p class="recipe-formula">【反則レーザー / 処刑チョップ】＋【大振り】＋【おかわり】</p>
+                <p>
+                  単体高火力で敵を1体ワンパンすると、<strong>【おかわり】の効果で別の敵に丸ごと同じコンボが再発動</strong>します！<br>
+                  さらに<strong>『余剰ダメージ転嫁』</strong>があればオーバーキル分のダメージが次の敵に飛び、ワンパン連鎖が止まらなくなります。
+                </p>
+              </div>
+
+              <div class="manual-box recipe-box">
+                <span class="recipe-tag">絶対無敵・要塞カウンター</span>
+                <h3>🛡️ 鉄壁ガード × 保険 × 要塞砲撃</h3>
+                <p class="recipe-formula">【シールドクラッシュ】＋【保険】＋【攻防一体】</p>
+                <p>
+                  攻撃しながら大量のガードを獲得し、<strong>溜まったガード値をそのまま攻撃力に変換</strong>して叩き込みます。<br>
+                  反則ルール<strong>『要塞砲撃ルール』『爆風バリア』</strong>と組み合わせると、ガードを得るたびに自動砲撃が飛び交う不沈艦になります。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: Enemy Countermeasures & Progression -->
+          <div class="manual-tab-content" id="tab-enemies">
+            <div class="manual-grid-2">
+              <div class="manual-box">
+                <h3>👹 特徴的な敵と攻略ポイント</h3>
+                <ul class="manual-list">
+                  <li>
+                    <strong>🛡️ カチカチ審判（1ヒットごとダメージ-3軽減）：</strong>
+                    小さな連打は軽減されてしまいます。【大振り】で一撃の威力を上げるか、【装甲破壊】（アーマー貫通＋被ダメ増加）や【誘爆】で崩しましょう。
+                  </li>
+                  <li>
+                    <strong>💢 やり返し君（直接攻撃に3ダメージ反撃）：</strong>
+                    ガードを張りながら殴るか、別の敵を殴って【誘爆】や【死体爆弾】の爆風で巻き込んで倒せば反撃を受けません！
+                  </li>
+                  <li>
+                    <strong>💣 ボンバーマン（撃破時に全体8ダメージ大爆発）：</strong>
+                    真っ先に倒せば<strong>敵全体に8ダメージを与える起爆剤</strong>になります！
+                  </li>
+                  <li>
+                    <strong>👑 絶対審判長・ジャッジマン（エリア3最終ボス）：</strong>
+                    HP280の強敵ですが、エリア1〜3で赤ペン改造と反則ルールを鍛え上げた超連鎖コンボなら1〜2ターンで吹き飛ばせます！
+                  </li>
+                </ul>
+              </div>
+
+              <div class="manual-box">
+                <h3>🗺️ ローグライク進行（全3エリア×5ステップ）</h3>
+                <ul class="manual-list">
+                  <li><strong>⚔️ 通常バトル / 👹 エリート戦：</strong>勝利するとカード報酬・ゴールド・確率で「赤ペン」や「新しい反則ルール」を獲得！</li>
+                  <li><strong>🖍️ 赤ペン魔改造教室：</strong>赤ペンが+1本もらえ、その場でカードを永続書き換えできます。</li>
+                  <li><strong>🛒 購買部・裏闇市：</strong>貯めたゴールドで「反則ルール枠を2→3枠に拡張」「改変スロットを2→3枠に拡張」「赤ペン購入」ができます。</li>
+                  <li><strong>📚 デッキ削除（圧縮）：</strong>画面上の「📚 デッキ」から不要な初期カードを20Gで削除すると、毎ターン最強コンボパーツを確実に引けるようになります！</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -271,6 +503,9 @@
               <h2 class="modal-title" id="map-area-title">第1エリア：地下反則リング予選</h2>
             </div>
             <div class="map-header-actions">
+              <button id="btn-map-manual" class="hud-btn manual-accent-btn">
+                📖 遊び方
+              </button>
               <button id="btn-map-redpen" class="hud-btn redpen-accent-btn">
                 🖍️ 赤ペン改造 (<span id="map-redpen-count">0</span>)
               </button>
@@ -283,7 +518,7 @@
             </div>
           </div>
           <p class="modal-desc" id="map-area-desc">
-            次に進むルートを選択してください。強敵やイベントで「赤ペン」や「反則ルール」を集め、ボスを吹き飛ばす異常コンボを完成させましょう！
+            次に進むマス（▶ 進行可能）をクリックしてください。強敵やイベントで「赤ペン」や「反則ルール」を集め、ボスを吹き飛ばす異常コンボを完成させましょう！
           </p>
           <div id="map-track-container" class="map-track-container">
             <!-- Populated dynamically -->
@@ -303,7 +538,7 @@
           <!-- Bonus Perks (Gold / Red Pen / Rule Drop) -->
           <div id="reward-bonus-strip" class="reward-bonus-strip"></div>
 
-          <div class="reward-section-title">▼ 新規カードを1枚デッキに追加（またはスキップしてデッキを圧縮）</div>
+          <div class="reward-section-title">▼ 新規カードを1枚クリックしてデッキに追加（またはスキップしてデッキを圧縮）</div>
           <div id="reward-cards-container" class="reward-cards-grid">
             <!-- 3 reward cards -->
           </div>
@@ -337,7 +572,7 @@
           </div>
 
           <p class="modal-desc">
-            書き換えたいカードを選び、<strong>赤ペンで元のテキストを抹消して反則効果を書き足します</strong>（「3連発 → 5連発」「敵1体 → 敵全員」「命中時爆発追加」など、性質そのものが激変します）。
+            左から書き換えたいカードを選び、右の<strong>赤ペン改造メニューをクリックすると元のテキストを抹消して反則効果を永続追記</strong>します！
           </p>
 
           <div class="redpen-workspace">
@@ -346,7 +581,7 @@
               <div id="redpen-deck-grid" class="mini-card-grid"></div>
             </div>
             <div class="redpen-options-col">
-              <h3 class="col-subtitle">② 赤ペン書き換え内容を選択</h3>
+              <h3 class="col-subtitle">② 赤ペン書き換え内容をクリック</h3>
               <div id="redpen-options-container" class="redpen-options-container">
                 <div class="empty-hint">左のリストからカードを選択してください</div>
               </div>
