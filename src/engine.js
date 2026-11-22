@@ -137,7 +137,7 @@ export class RunState {
     this.hand = [];
     this.drawPile = [];
     this.discardPile = [];
-    this.handSize = 6;
+    this.handSize = 4;
 
     // Mod slots per combo (starts at 2, expandable to 3 via shop/event)
     this.maxModSlots = 2;
@@ -731,12 +731,40 @@ export class CombatEngine {
 
   drawCards(count) {
     const drawn = [];
-    for (let i = 0; i < count; i++) {
-      if (this.runState.drawPile.length === 0) {
-        if (this.runState.discardPile.length === 0) break;
+    const refillIfNeeded = () => {
+      if (this.runState.drawPile.length === 0 && this.runState.discardPile.length > 0) {
         this.runState.drawPile = this.runState.discardPile.splice(0);
         this._shuffle(this.runState.drawPile);
       }
+    };
+
+    const pullByType = (wantedType) => {
+      refillIfNeeded();
+      let idx = this.runState.drawPile.findIndex((c) => c.type === wantedType);
+      if (idx === -1 && this.runState.discardPile.some((c) => c.type === wantedType)) {
+        this.runState.drawPile.push(...this.runState.discardPile.splice(0));
+        this._shuffle(this.runState.drawPile);
+        idx = this.runState.drawPile.findIndex((c) => c.type === wantedType);
+      }
+      if (idx !== -1) {
+        const [card] = this.runState.drawPile.splice(idx, 1);
+        this.runState.hand.push(card);
+        drawn.push(card);
+        return true;
+      }
+      return false;
+    };
+
+    // Guarantee at least 1 Action card and 2 Mod cards (or 2 Action + 2 Mod) so every 4-card hand makes a fun combo!
+    if (count >= 3) {
+      pullByType('action');
+      pullByType('mod');
+      if (count >= 4) pullByType('mod');
+    }
+
+    while (drawn.length < count) {
+      refillIfNeeded();
+      if (this.runState.drawPile.length === 0) break;
       const card = this.runState.drawPile.pop();
       if (card) {
         this.runState.hand.push(card);
