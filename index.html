@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>反則上等！ - ルール改変×超連鎖ローグライクカードバトル</title>
+    <meta name="description" content="カードの効果やゲームのルールを赤ペンで改変し、異常な大連鎖で敵を吹っ飛ばす3Dローグライク・デッキ構築型カードバトル『反則上等！』" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <script type="module" crossorigin src="./assets/index-BiJYH5v6.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Bds57BZk.css">
+  </head>
+  <body>
+    <div id="app">
+      <!-- 3D Three.js Arena Canvas Container -->
+      <div id="arena-container" aria-label="3D Battle Arena"></div>
+
+      <!-- Screen Flash & Comic Impact Overlay -->
+      <div id="fx-overlay" class="pointer-events-none"></div>
+
+      <!-- Floating Damage Popups over 3D Arena -->
+      <div id="damage-popup-layer" class="pointer-events-none"></div>
+
+      <!-- Clean Top-of-Arena Enemy Dock (Never overlaps 3D models or each other!) -->
+      <div id="enemy-hud-layer" class="enemy-dock-bar"></div>
+
+      <!-- Single-Line Top Status Header Bar -->
+      <header id="top-bar" class="top-bar hidden">
+        <div class="top-left-group">
+          <div class="area-badge" id="hud-area-badge">
+            <span class="area-label">AREA 1</span>
+            <span class="node-label" id="hud-node-name">1/5</span>
+          </div>
+          <div class="stat-pill hp-pill" id="hud-hp-pill">
+            <span>❤️</span>
+            <div class="hp-bar-mini">
+              <div class="hp-bar-fill" id="hud-hp-fill" style="width: 100%"></div>
+            </div>
+            <span id="hud-hp-text">80</span>
+          </div>
+          <div class="stat-pill guard-pill" id="hud-guard-pill">
+            <span>🛡️</span>
+            <span id="hud-guard-text">0</span>
+          </div>
+          <div class="stat-pill gold-pill" id="hud-gold-pill">
+            <span>🪙</span>
+            <span id="hud-gold-text">60G</span>
+          </div>
+          <button class="stat-pill redpen-pill" id="btn-open-redpen" title="赤ペンでカードを永続改造">
+            <span>🖍️</span>
+            <span class="badge-count" id="hud-redpen-count">1</span>
+          </button>
+        </div>
+
+        <!-- Hidden desktop rules container kept for compatibility -->
+        <div class="foul-rules-bar hidden" id="hud-foul-rules"></div>
+
+        <div class="top-right-group">
+          <button id="btn-open-manual-hud" class="hud-btn manual-accent-btn" title="遊び方・説明書">📖<span class="hide-on-mobile"> 遊び方</span></button>
+          <button id="btn-rules-manage" class="hud-btn">⚠️ <span id="hud-rules-count">1/2</span></button>
+          <button id="btn-deck-view" class="hud-btn">📚 <span id="hud-deck-count">10</span></button>
+          <button id="btn-speed-toggle" class="hud-btn speed-btn">⚡ 1x</button>
+          <button id="btn-bgm-toggle" class="hud-icon-btn">🎵</button>
+          <button id="btn-sfx-toggle" class="hud-icon-btn">🔊</button>
+          <button id="btn-start-tutorial-hud" class="hidden"></button>
+        </div>
+      </header>
+
+      <!-- Combo Chain Counter Banner (Appears during Firing Sequence) -->
+      <div id="combo-counter-banner" class="combo-banner hidden">
+        <div class="combo-hit-box">
+          <span id="combo-count-num" class="combo-num">0</span>
+          <span class="combo-unit">CHAIN!!</span>
+        </div>
+        <div class="combo-dmg-box">
+          TOTAL <span id="combo-total-dmg" class="combo-dmg-num">0</span> DMG
+        </div>
+        <div id="combo-active-rule-toast" class="combo-rule-toast"></div>
+        <button id="btn-skip-playback" class="skip-playback-btn">⏭️ スキップ</button>
+      </div>
+
+      <!-- Boss Cut-In Dramatic Announcement Banner -->
+      <div id="boss-cutin-banner" class="boss-cutin-banner hidden pointer-events-none">
+        <img src="./assets/judge_boss.jpg" alt="絶対審判長" class="boss-cutin-img" />
+        <div class="boss-cutin-text">
+          <span class="boss-cutin-tag">BOSS BATTLE</span>
+          <strong id="boss-cutin-title" class="boss-cutin-title">絶対審判長 参戦！！</strong>
+        </div>
+      </div>
+
+      <!-- Combat Bottom UI: Integrated Coach + Compact Slots + 4-Card Hand -->
+      <section id="combat-ui" class="combat-ui hidden">
+        <!-- Integrated 1-Line Coach & Formula Preview Bar -->
+        <div class="coach-and-launch-bar">
+          <div class="coach-formula-left">
+            <div id="tutorial-banner" class="inline-coach-line">
+              <span class="tutorial-step-indicator" id="tutorial-step-badge">STEP 1</span>
+              <strong id="tutorial-title" class="tutorial-title">黄色のカードをタップ！</strong>
+              <span id="tutorial-text" class="hidden"></span>
+              <button id="btn-tutorial-manual" class="hidden"></button>
+              <button id="btn-close-tutorial" class="hidden"></button>
+            </div>
+            <div class="preview-line">
+              <span id="preview-target-badge" class="preview-target-badge">敵1体</span>
+              <span class="preview-formula" id="preview-formula-text">
+                4 DMG × 1回 = <strong class="preview-total">4</strong>
+              </span>
+              <span class="preview-synergies" id="preview-synergies-list"></span>
+            </div>
+          </div>
+
+          <div class="launch-controls">
+            <button id="btn-clear-slots" class="clear-slots-btn" title="リセット">↩</button>
+            <button id="btn-fire-combo" class="fire-btn">
+              <span class="fire-btn-main">🔥 発射！</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Compact 3-Pill Combo Slot Bar (Shows only Icon + Name, zero overflowing text!) -->
+        <div class="assembly-dock" id="assembly-dock">
+          <div class="slot-group" id="slot-group-action">
+            <div id="slot-action" class="card-slot action-slot" data-slot-type="action">
+              <span class="slot-pill-tag yellow">①行動</span>
+              <span class="slot-pill-name">👊 素手パンチ</span>
+            </div>
+            <button id="btn-use-bare-punch" class="hidden">👊 素手</button>
+          </div>
+
+          <div class="slot-connector">＋</div>
+
+          <div class="slot-group" id="slot-group-mod-0">
+            <div id="slot-mod-0" class="card-slot mod-slot" data-slot-type="mod" data-mod-index="0">
+              <span class="slot-pill-tag blue">②改変</span>
+              <span class="slot-pill-name">空き</span>
+            </div>
+          </div>
+
+          <div class="slot-connector">＋</div>
+
+          <div class="slot-group" id="slot-group-mod-1">
+            <div id="slot-mod-1" class="card-slot mod-slot" data-slot-type="mod" data-mod-index="1">
+              <span class="slot-pill-tag blue">③改変</span>
+              <span class="slot-pill-name">空き</span>
+            </div>
+          </div>
+
+          <div class="slot-group hidden" id="slot-group-mod-2">
+            <div id="slot-mod-2" class="card-slot mod-slot" data-slot-type="mod" data-mod-index="2">
+              <span class="slot-pill-tag blue">EX</span>
+              <span class="slot-pill-name">空き</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4-Card Spacious Player Hand (Zero overlap, zero scroll!) -->
+        <div class="hand-bar-wrapper">
+          <div class="hand-container" id="hand-container" aria-label="プレイヤーの手札"></div>
+          <!-- Hidden legacy pile counters kept for compatibility -->
+          <div id="btn-draw-pile" class="hidden"><span id="hud-draw-count">0</span></div>
+          <div id="btn-discard-pile" class="hidden"><span id="hud-discard-count">0</span></div>
+        </div>
+      </section>
+
+      <!-- ULTRA-CLEAN LOW-COGNITIVE-LOAD TITLE SCREEN -->
+      <section id="title-screen" class="screen-overlay">
+        <div class="title-bg-image" style="background-image: url('./assets/title_bg.jpg')"></div>
+        <div class="title-bg-vignette"></div>
+
+        <div class="title-content">
+          <h1 class="game-logo">
+            <span class="logo-top">ルール改変 × 超連鎖カードバトル</span>
+            <span class="logo-main">反則上等！</span>
+          </h1>
+
+          <p class="title-tagline">
+            <strong>🟡 行動カード</strong> に <strong>🔵 改変カード</strong> を重ねて <strong>🔥 発射！</strong>
+          </p>
+
+          <!-- Clean 3-Tab Style Picker + 1-Line Summary -->
+          <div class="style-selector-box">
+            <div class="style-selector-label">▼ スタイルを選択</div>
+            <div class="starter-selection" id="starter-selection"></div>
+            <div class="starter-active-summary" id="starter-active-summary"></div>
+          </div>
+
+          <!-- Primary CTA Button + 2 Clean Sub Buttons -->
+          <div class="title-actions">
+            <button id="btn-start-tutorial-run" class="primary-arcade-btn big-play-btn">
+              ▶ ゲームスタート！ (ガイド付き)
+            </button>
+            <div class="title-sub-actions">
+              <button id="btn-open-manual-title" class="manual-arcade-btn">
+                📖 遊び方
+              </button>
+              <button id="btn-quick-demo-combo" class="secondary-arcade-btn">
+                💥 超連鎖ブーストで開始
+              </button>
+              <button id="btn-start-run" class="hidden"></button>
+            </div>
+          </div>
+
+          <div class="title-footer-bar">
+            <div class="meta-records" id="title-meta-records">
+              <span>🏆 最高 <strong id="record-max-combo">0</strong> 連鎖</span>
+              <span>💥 最大 <strong id="record-max-dmg">0</strong> DMG</span>
+              <span class="hidden"><strong id="record-wins">0</strong></span>
+            </div>
+            <div class="title-audio-controls">
+              <button id="btn-title-bgm" class="hud-btn">🎵 BGM: ON</button>
+              <button id="btn-title-sfx" class="hud-btn">🔊 SE: ON</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- USER MANUAL / HOW TO PLAY MODAL -->
+      <section id="manual-modal" class="screen-overlay hidden">
+        <div class="modal-panel manual-panel">
+          <div class="modal-header">
+            <h2 class="modal-title">📖 遊び方ガイド</h2>
+            <div class="manual-header-actions">
+              <button id="btn-manual-start-tutorial" class="hud-btn tutorial-accent-btn">
+                ▶ ガイド付きで遊ぶ
+              </button>
+              <button id="btn-close-manual" class="modal-close-btn">✕ 閉じる</button>
+            </div>
+          </div>
+
+          <div class="manual-tabs" id="manual-tabs">
+            <button class="manual-tab-btn active" data-tab="tab-basics">① 基本の3ステップ</button>
+            <button class="manual-tab-btn" data-tab="tab-cards">② 赤ペン改造＆反則ルール</button>
+            <button class="manual-tab-btn" data-tab="tab-combos">③ 最強コンボ例</button>
+          </div>
+
+          <div class="manual-tab-content active" id="tab-basics">
+            <div class="manual-flow-diagram">
+              <div class="flow-step yellow">
+                <strong>STEP 1：🟡 行動カード（黄色）を1枚選ぶ</strong>
+                <span>「パンチ」「連射」「ガード」など、ベースになる技をセットします。</span>
+              </div>
+              <div class="flow-step blue">
+                <strong>STEP 2：🔵 改変カード（青色）を2枚まで重ねる</strong>
+                <span>「回数+2（3連発）」「命中ごとに全体爆発」「全体攻撃化」などをトッピングして技を魔改造します。</span>
+              </div>
+              <div class="flow-step red">
+                <strong>STEP 3：『🔥 発射！』ボタンを押す！</strong>
+                <span>改造した技が発動！敵のHPをすべて0にすればステージクリアです。</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="manual-tab-content" id="tab-cards">
+            <div class="manual-grid-2">
+              <div class="manual-box">
+                <h3>🖍️ 赤ペン改造（カードを永続強化）</h3>
+                <p>画面上の「🖍️」ボタンを押すと、持っているカードを<strong>赤ペンで書き換えて永続強化</strong>できます。</p>
+                <div class="manual-redpen-example">
+                  <div class="rp-old">単体 6 DMG</div>
+                  <div class="rp-new">🖍️ 敵全員に 8 DMG！</div>
+                </div>
+              </div>
+              <div class="manual-box">
+                <h3>⚠️ 反則ルール（自動で大連鎖！）</h3>
+                <p>装備しているだけで自動発動するルールです。</p>
+                <ul class="manual-list">
+                  <li><strong>💀 死体爆弾：</strong>敵を倒すたび、他の敵全員に7ダメージ爆発！</li>
+                  <li><strong>📈 連撃インフレ：</strong>攻撃が当たるたび、全ダメージが+2ずつ上昇！</li>
+                  <li><strong>🛡️ 要塞砲撃：</strong>ガードを得るたび、敵に自動砲撃！</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="manual-tab-content" id="tab-combos">
+            <div class="manual-grid-2">
+              <div class="manual-box recipe-box">
+                <span class="recipe-tag">おすすめ①</span>
+                <h3>💥 連打 × 誘爆 コンボ</h3>
+                <p class="recipe-formula">🟡連射 ＋ 🔵3連発 ＋ 🔵誘爆</p>
+                <p>5連射の1発ごとに全体爆発が発生！敵が1体倒れると「死体爆弾」も連鎖して画面全体が吹き飛びます。</p>
+              </div>
+              <div class="manual-box recipe-box">
+                <span class="recipe-tag">おすすめ②</span>
+                <h3>🍖 大振り × おかわり コンボ</h3>
+                <p class="recipe-formula">🟡レーザー ＋ 🔵威力2.5倍 ＋ 🔵おかわり</p>
+                <p>高威力で1体倒すと「おかわり」で次の敵に同じ攻撃が丸ごと再発動！次々にワンパン連鎖します。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROUTE MAP / NODE SELECTION OVERLAY -->
+      <section id="map-screen" class="screen-overlay hidden">
+        <div class="modal-panel map-panel">
+          <div class="modal-header">
+            <div>
+              <span class="modal-kicker" id="map-area-kicker">AREA 1 / 3</span>
+              <h2 class="modal-title" id="map-area-title">次に行くマスを選んでください</h2>
+            </div>
+            <div class="map-header-actions">
+              <button id="btn-map-manual" class="hud-btn manual-accent-btn">📖 遊び方</button>
+              <button id="btn-map-redpen" class="hud-btn redpen-accent-btn">
+                🖍️ 赤ペン(<span id="map-redpen-count">0</span>)
+              </button>
+              <button id="btn-map-rules" class="hud-btn">⚠️ 反則</button>
+              <button id="btn-map-deck" class="hud-btn">📚 デッキ</button>
+            </div>
+          </div>
+          <p class="modal-desc hidden" id="map-area-desc"></p>
+          <div id="map-track-container" class="map-track-container"></div>
+        </div>
+      </section>
+
+      <!-- POST-BATTLE REWARD OVERLAY -->
+      <section id="reward-screen" class="screen-overlay hidden">
+        <div class="modal-panel reward-panel">
+          <div class="reward-banner-tag">VICTORY!!</div>
+          <h2 class="modal-title" id="reward-title">勝利！報酬カードを1枚選ぼう</h2>
+          <p class="modal-desc" id="reward-summary-text"></p>
+
+          <div id="reward-bonus-strip" class="reward-bonus-strip"></div>
+
+          <div id="reward-cards-container" class="reward-cards-grid"></div>
+
+          <div class="reward-footer">
+            <button id="btn-reward-redpen-now" class="hud-btn redpen-accent-btn hidden">
+              🖍️ 赤ペン改造を使う
+            </button>
+            <button id="btn-skip-card-reward" class="secondary-arcade-btn">
+              スキップ (+15G)
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RED PEN WORKSHOP MODAL -->
+      <section id="redpen-modal" class="screen-overlay hidden">
+        <div class="modal-panel redpen-panel">
+          <div class="modal-header">
+            <div class="redpen-title-group">
+              <img src="./assets/red_pen.jpg" alt="赤ペン" class="redpen-modal-icon" />
+              <h2 class="modal-title">🖍️ 赤ペン改造 (残り <span id="redpen-modal-stock">1</span> 本)</h2>
+            </div>
+            <button id="btn-close-redpen" class="modal-close-btn">✕ 閉じる</button>
+          </div>
+
+          <div class="redpen-workspace">
+            <div class="redpen-card-list-col">
+              <h3 class="col-subtitle">① カードを選ぶ</h3>
+              <div id="redpen-deck-grid" class="mini-card-grid"></div>
+            </div>
+            <div class="redpen-options-col">
+              <h3 class="col-subtitle">② 書き換え内容を選ぶ</h3>
+              <div id="redpen-options-container" class="redpen-options-container"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHOP / EVENT / FOUL RULE / DECK VIEWER MODAL -->
+      <section id="utility-modal" class="screen-overlay hidden">
+        <div class="modal-panel utility-panel">
+          <div class="modal-header">
+            <div>
+              <span class="modal-kicker" id="utility-modal-kicker">MENU</span>
+              <h2 class="modal-title" id="utility-modal-title">メニュー</h2>
+            </div>
+            <button id="btn-close-utility" class="modal-close-btn">✕ 閉じる</button>
+          </div>
+          <div id="utility-modal-body" class="utility-modal-body"></div>
+        </div>
+      </section>
+
+      <!-- RUN END (VICTORY / GAME OVER) OVERLAY -->
+      <section id="gameover-screen" class="screen-overlay hidden">
+        <div class="modal-panel gameover-panel">
+          <div class="gameover-kicker" id="gameover-kicker">RESULT</div>
+          <h2 class="gameover-title" id="gameover-title">完全制覇！！</h2>
+          <p class="gameover-desc" id="gameover-desc"></p>
+          <div class="gameover-stats-grid" id="gameover-stats-grid"></div>
+          <div class="gameover-actions">
+            <button id="btn-play-again" class="primary-arcade-btn">🔄 もう一度遊ぶ</button>
+            <button id="btn-endless-continue" class="secondary-arcade-btn hidden"></button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </body>
+</html>
