@@ -1098,17 +1098,19 @@ html, body {
   .secondary-arcade-btn, .manual-arcade-btn { padding: 8px 8px; font-size: 0.76rem; }
   .title-footer-bar { font-size: 0.68rem; }
 
-  /* 1-Line Top Bar on Mobile */
+  .hide-on-mobile { display: none; }
+
+  /* 1-Line Top Bar on Mobile — guaranteed fit within 375px */
   .top-bar {
-    padding: 4px 6px;
+    padding: 4px 5px;
     gap: 2px;
     flex-wrap: nowrap;
     justify-content: space-between;
   }
-  .top-left-group, .top-right-group { gap: 3px; flex-wrap: nowrap; }
+  .top-left-group, .top-right-group { gap: 2px; flex-wrap: nowrap; }
   .area-badge, .stat-pill, .hud-btn, .hud-icon-btn {
-    padding: 2px 5px;
-    font-size: 0.6rem;
+    padding: 2px 4px;
+    font-size: 0.58rem;
     white-space: nowrap;
   }
   .hp-bar-mini,
@@ -1132,6 +1134,22 @@ html, body {
   .enemy-hp-bar-outer { height: 11px; margin-bottom: 2px; }
   .enemy-hp-text { font-size: 0.58rem; }
   .enemy-intent-row { font-size: 0.56rem; padding: 1px 4px; }
+
+  /* Compact Combo Banner on Mobile — never overflows 375px */
+  .combo-banner {
+    top: 98px;
+    max-width: calc(100vw - 12px);
+    padding: 4px 10px;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .combo-num { font-size: 1.45rem; }
+  .combo-unit { font-size: 0.72rem; }
+  .combo-dmg-box { font-size: 0.72rem; padding: 2px 6px; }
+  .combo-dmg-num { font-size: 0.92rem; }
+  .combo-rule-toast { font-size: 0.66rem; max-width: 100%; }
+  .skip-playback-btn { padding: 3px 6px; font-size: 0.64rem; }
 
   /* Bottom Combat UI on Mobile */
   .combat-ui {
@@ -1180,6 +1198,18 @@ html, body {
   .card-desc {
     font-size: 0.68rem;
     padding: 3px 6px;
+  }
+
+  /* 2-Column Compact Grid for Red Pen Workshop & Deck Viewer */
+  .mini-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    max-height: 185px;
+  }
+  .mini-card-grid .game-card {
+    width: 100%;
+    min-width: 0;
   }
 
   .manual-grid-2, .redpen-workspace { grid-template-columns: 1fr; }

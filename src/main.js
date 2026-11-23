@@ -381,6 +381,11 @@ class HansokuJotoApp {
       if (this.combat && !this.combat.isBattleOver) {
         this._renderCombatCardsAndSlots();
       }
+      if (typeof this._onCloseRedPenCallback === 'function') {
+        const cb = this._onCloseRedPenCallback;
+        this._onCloseRedPenCallback = null;
+        cb();
+      }
     });
 
     const openDeckModal = () => {
@@ -406,6 +411,11 @@ class HansokuJotoApp {
       this._updateTopHud();
       if (this.combat && !this.combat.isBattleOver) {
         this._updateComboPreview();
+      }
+      if (typeof this._onCloseUtilityCallback === 'function') {
+        const cb = this._onCloseUtilityCallback;
+        this._onCloseUtilityCallback = null;
+        cb();
       }
     });
 
@@ -1479,20 +1489,6 @@ class HansokuJotoApp {
     this.selectedRedPenCardUid = this.runState.deck[0]?.uid || null;
     this._renderRedPenWorkshop();
     this.el.redpenModal.classList.remove('hidden');
-
-    const closeBtn = this.el.btnCloseRedpen;
-    closeBtn.onclick = () => {
-      this.el.redpenModal.classList.add('hidden');
-      this._updateTopHud();
-      if (this.combat && !this.combat.isBattleOver) {
-        this._renderCombatCardsAndSlots();
-      }
-      if (typeof this._onCloseRedPenCallback === 'function') {
-        const cb = this._onCloseRedPenCallback;
-        this._onCloseRedPenCallback = null;
-        cb();
-      }
-    };
   }
 
   _renderRedPenWorkshop() {
@@ -1505,8 +1501,7 @@ class HansokuJotoApp {
     allCards.forEach((card) => {
       const cardEl = this._createCardElement(card);
       if (card.uid === this.selectedRedPenCardUid) {
-        cardEl.style.outline = '4px solid #ff2a4b';
-        cardEl.style.transform = 'translateY(-6px)';
+        cardEl.style.outline = '3.5px solid #ff2a4b';
       }
 
       cardEl.addEventListener('click', () => {
@@ -1523,7 +1518,7 @@ class HansokuJotoApp {
     const selectedCard = allCards.find((c) => c.uid === this.selectedRedPenCardUid);
     if (!selectedCard) {
       this.el.redpenOptionsContainer.innerHTML =
-        '<div class="empty-hint">左のリストからカードを選択してください</div>';
+        '<div class="empty-hint">カードを選択してください</div>';
       return;
     }
 
@@ -1537,7 +1532,7 @@ class HansokuJotoApp {
       btn.innerHTML = `
         <div class="redpen-opt-label">
           🖍️ ${opt.label}
-          ${opt.alreadyApplied ? '<span style="color:#22c55e;margin-left:8px;">[書き換え済]</span>' : ''}
+          ${opt.alreadyApplied ? '<span style="color:#22c55e;margin-left:8px;">[済]</span>' : ''}
         </div>
         <div class="redpen-opt-detail">
           <span class="redpen-strike">${opt.oldText}</span>
@@ -1549,12 +1544,26 @@ class HansokuJotoApp {
       btn.addEventListener('click', () => {
         if (!canAfford) return;
         this.runState.rewriteCardWithRedPen(selectedCard.uid, opt.id, true);
-        // Also sync if this card is currently in combat hand
+        // Sync rewritten card across active combat piles AND slotted cards!
         if (this.combat) {
-          const inHand = this.runState.hand.find((c) => c.uid === selectedCard.uid);
-          if (inHand && inHand !== selectedCard) {
-            Object.assign(inHand, structuredClone(selectedCard));
+          const allCombatCopies = [
+            ...this.runState.hand,
+            ...this.runState.drawPile,
+            ...this.runState.discardPile,
+          ];
+          allCombatCopies.forEach((c) => {
+            if (c && c.uid === selectedCard.uid && c !== selectedCard) {
+              Object.assign(c, structuredClone(selectedCard));
+            }
+          });
+          if (this.slottedActionCard && this.slottedActionCard.uid === selectedCard.uid) {
+            Object.assign(this.slottedActionCard, structuredClone(selectedCard));
           }
+          this.slottedModCards.forEach((m) => {
+            if (m && m.uid === selectedCard.uid) {
+              Object.assign(m, structuredClone(selectedCard));
+            }
+          });
         }
         sound.playRedPenWrite();
         if (this.arena) {
@@ -1574,11 +1583,11 @@ class HansokuJotoApp {
 
   openFoulRulesModal() {
     if (!this.runState) return;
-    this.el.utilityModalKicker.textContent = 'FOUL RULES EQUIPMENT // 反則ルール編成';
-    this.el.utilityModalTitle.textContent = `戦場に適用する反則ルール (${this.runState.equippedRules.length} / ${this.runState.maxEquippedRules} 枠装備中)`;
+    this._onCloseUtilityCallback = null;
+    this.el.utilityModalKicker.textContent = 'FOUL RULES // 反則ルール編成';
 
     const renderBody = () => {
-      this.el.utilityModalTitle.textContent = `戦場に適用する反則ルール (${this.runState.equippedRules.length} / ${this.runState.maxEquippedRules} 枠装備中)`;
+      this.el.utilityModalTitle.textContent = `反則ルール (${this.runState.equippedRules.length} / ${this.runState.maxEquippedRules} 枠)`;
       this.el.utilityModalBody.innerHTML = '';
 
       const grid = document.createElement('div');
@@ -1594,18 +1603,18 @@ class HansokuJotoApp {
 
         box.innerHTML = `
           <div>
-            <div style="font-weight:900;font-size:0.98rem;color:${isEquipped ? '#ffb800' : '#fff'}">
+            <div style="font-weight:900;font-size:0.94rem;color:${isEquipped ? '#ffb800' : '#fff'}">
               ${rule.icon || '⚠️'} ${rule.name}
             </div>
-            <div style="font-size:0.8rem;color:#cbd5e1;margin-top:4px;">${rule.description}</div>
+            <div style="font-size:0.78rem;color:#cbd5e1;margin-top:4px;">${rule.description}</div>
           </div>
           <div>
             ${
               isUnlocked
                 ? `<button class="hud-btn" style="width:100%;border-color:${
                     isEquipped ? '#ff2a4b' : '#22c55e'
-                  }">${isEquipped ? '✔ 装備中 (クリックで外す)' : '＋ 装備する'}</button>`
-                : '<span style="font-size:0.75rem;color:#94a3b8;">🔒 エリート戦・ショップで解放</span>'
+                  }">${isEquipped ? '✔ 装備中 (タップで外す)' : '＋ 装備する'}</button>`
+                : '<span style="font-size:0.72rem;color:#94a3b8;">🔒 エリート戦・ショップで解放</span>'
             }
           </div>
         `;
@@ -1631,11 +1640,11 @@ class HansokuJotoApp {
 
   openDeckViewerModal() {
     if (!this.runState) return;
-    this.el.utilityModalKicker.textContent = 'DECK & CARD REMOVAL // デッキ一覧・圧縮';
-    this.el.utilityModalTitle.textContent = `所持デッキ一覧 (${this.runState.deck.length}枚)`;
+    this._onCloseUtilityCallback = null;
+    this.el.utilityModalKicker.textContent = 'DECK // デッキ一覧・削除';
 
     const renderDeck = () => {
-      this.el.utilityModalTitle.textContent = `所持デッキ一覧 (${this.runState.deck.length}枚) - 不要なカードは20Gで削除してコンボ率UP！`;
+      this.el.utilityModalTitle.textContent = `所持デッキ (${this.runState.deck.length}枚)`;
       this.el.utilityModalBody.innerHTML = '';
 
       const grid = document.createElement('div');
@@ -1679,17 +1688,18 @@ class HansokuJotoApp {
   }
 
   openBlackMarketShop(onCloseCallback = null) {
+    this._onCloseUtilityCallback = onCloseCallback;
     this.currentShopInventory = this.runState.generateShopInventory();
     this.el.utilityModalKicker.textContent = 'BLACK MARKET // 購買部・裏闇市';
 
     const renderShop = () => {
-      this.el.utilityModalTitle.textContent = `購買部・裏闇市 (所持ゴールド: ${this.runState.gold}G)`;
+      this.el.utilityModalTitle.textContent = `購買部・裏闇市 (所持: ${this.runState.gold}G)`;
       this.el.utilityModalBody.innerHTML = '';
 
       // Services (Red Pen, Slot expansions, Heal)
       const srvTitle = document.createElement('h3');
       srvTitle.className = 'col-subtitle';
-      srvTitle.textContent = '▼ 禁断の反則パーツ＆スロット拡張';
+      srvTitle.textContent = '▼ 反則パーツ＆スロット拡張';
       this.el.utilityModalBody.appendChild(srvTitle);
 
       const srvGrid = document.createElement('div');
@@ -1703,7 +1713,7 @@ class HansokuJotoApp {
         box.innerHTML = `
           <div>
             <div style="font-weight:900;color:#fde047">${srv.icon} ${srv.name}</div>
-            <div style="font-size:0.78rem;color:#cbd5e1;margin-top:4px;">${srv.description}</div>
+            <div style="font-size:0.76rem;color:#cbd5e1;margin-top:4px;">${srv.description}</div>
           </div>
           <button class="hud-btn" ${!canBuy ? 'disabled' : ''}>
             ${srv.sold ? '✔ 購入済' : `🪙 ${srv.price}G で購入`}
@@ -1745,7 +1755,7 @@ class HansokuJotoApp {
           box.innerHTML = `
             <div>
               <div style="font-weight:900;color:#ff6b6b">${item.rule.icon || '⚠️'} ${item.rule.name}</div>
-              <div style="font-size:0.78rem;color:#cbd5e1;margin-top:4px;">${item.rule.description}</div>
+              <div style="font-size:0.76rem;color:#cbd5e1;margin-top:4px;">${item.rule.description}</div>
             </div>
             <button class="hud-btn" ${!canBuy ? 'disabled' : ''}>
               ${item.sold ? '✔ 習得済' : `🪙 ${item.price}G で習得＆装備`}
@@ -1809,15 +1819,51 @@ class HansokuJotoApp {
 
     renderShop();
     this.el.utilityModal.classList.remove('hidden');
+  }
 
-    this.el.btnCloseUtility.onclick = () => {
-      this.el.utilityModal.classList.add('hidden');
-      this._updateTopHud();
-      if (typeof onCloseCallback === 'function') onCloseCallback();
-    };
+  _applyMysteryEventEffect(effect = {}) {
+    const rs = this.runState;
+    if (!rs || !effect) return;
+
+    if (effect.hpCost) {
+      rs.hp = Math.max(1, rs.hp - effect.hpCost);
+    }
+    if (effect.maxHpBonus) {
+      rs.maxHp += effect.maxHpBonus;
+      rs.hp += effect.maxHpBonus;
+    }
+    if (effect.fullHeal) {
+      rs.hp = rs.maxHp;
+    }
+    if (effect.heal) {
+      rs.heal(effect.heal);
+    }
+    if (effect.gold) {
+      rs.gold += effect.gold;
+    }
+    if (effect.redPens) {
+      rs.redPens += effect.redPens;
+    }
+    if (effect.grantRandomRule) {
+      const unowned = Object.keys(FOUL_RULES).filter((id) => !rs.unlockedRules.includes(id));
+      if (unowned.length > 0) {
+        const picked = unowned[Math.floor(Math.random() * unowned.length)];
+        rs.unlockAndEquipRule(picked);
+      } else {
+        rs.gold += 50;
+      }
+    }
+    if (effect.expandModSlotOrPens) {
+      if (rs.maxModSlots < 3) {
+        rs.maxModSlots = 3;
+      } else {
+        rs.redPens += 2;
+      }
+    }
   }
 
   openMysteryEventModal(onCloseCallback = null) {
+    this._onCloseUtilityCallback = onCloseCallback;
     const ev = MYSTERY_EVENTS[Math.floor(Math.random() * MYSTERY_EVENTS.length)];
     this.el.utilityModalKicker.textContent = 'MYSTERY EVENT // ハプニング発生！';
     this.el.utilityModalTitle.textContent = `${ev.icon || '❓'} ${ev.title}`;
@@ -1836,21 +1882,21 @@ class HansokuJotoApp {
       btn.className = 'redpen-option-btn';
       btn.innerHTML = `
         <div class="redpen-opt-label">▶ ${ch.label}</div>
-        <div class="redpen-opt-detail">${ch.effectText || ''}</div>
+        <div class="redpen-opt-detail">${ch.effectDesc || ch.effectText || ''}</div>
       `;
 
       btn.addEventListener('click', () => {
         if (typeof ch.apply === 'function') {
           ch.apply(this.runState);
-        } else {
-          // Fallback generic effect handling
-          this.runState.redPens += 1;
-          this.runState.heal(15);
+        } else if (ch.effect) {
+          this._applyMysteryEventEffect(ch.effect);
         }
         sound.playRuleTrigger();
         this._updateTopHud();
         this.el.utilityModal.classList.add('hidden');
-        if (typeof onCloseCallback === 'function') onCloseCallback();
+        const cb = this._onCloseUtilityCallback;
+        this._onCloseUtilityCallback = null;
+        if (typeof cb === 'function') cb();
       });
 
       choicesBox.appendChild(btn);
@@ -1858,11 +1904,6 @@ class HansokuJotoApp {
 
     this.el.utilityModalBody.appendChild(choicesBox);
     this.el.utilityModal.classList.remove('hidden');
-
-    this.el.btnCloseUtility.onclick = () => {
-      this.el.utilityModal.classList.add('hidden');
-      if (typeof onCloseCallback === 'function') onCloseCallback();
-    };
   }
 
   // ==========================================================================
@@ -1873,6 +1914,7 @@ class HansokuJotoApp {
     this.el.combatUi.classList.add('hidden');
     this.el.rewardScreen.classList.add('hidden');
     this.el.mapScreen.classList.add('hidden');
+    this.el.enemyHudLayer.innerHTML = '';
 
     const st = this.runState.stats;
     this.el.gameoverKicker.textContent = isVictory ? 'CHAMPION OF FOUL PLAY!!' : 'KNOCKED OUT...';
@@ -1913,8 +1955,10 @@ class HansokuJotoApp {
   _spawnPopup(x, y, text, styleClass = 'normal') {
     const el = document.createElement('div');
     el.className = `dmg-popup ${styleClass}`;
-    el.style.left = `${Math.round(x)}px`;
-    el.style.top = `${Math.round(y)}px`;
+    const safeX = Math.max(76, Math.min(window.innerWidth - 76, x));
+    const safeY = Math.max(90, Math.min(window.innerHeight - 230, y));
+    el.style.left = `${Math.round(safeX)}px`;
+    el.style.top = `${Math.round(safeY)}px`;
     el.textContent = text;
     this.el.damagePopupLayer.appendChild(el);
     setTimeout(() => {

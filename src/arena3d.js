@@ -31,6 +31,7 @@ export class Arena3D {
     this.camera = new THREE.PerspectiveCamera(42, this.width / this.height, 0.1, 120);
     this.baseCamPos = new THREE.Vector3(0, 6.8, 16.5);
     this.baseLookAt = new THREE.Vector3(0.4, 0.85, -0.3);
+    this._applyResponsiveCameraFraming();
     this.currentLookAt = this.baseLookAt.clone();
     this.camera.position.copy(this.baseCamPos);
     this.camera.lookAt(this.currentLookAt);
@@ -2284,13 +2285,30 @@ export class Arena3D {
   // Resize & Cleanup
   // ============================================================================
 
+  _applyResponsiveCameraFraming() {
+    if (!this.camera) return;
+    const aspect = this.width / Math.max(1, this.height);
+    if (aspect < 0.95) {
+      // Portrait mobile: scale distance inversely with aspect so Hero (left) & all Enemies (right) fit cleanly!
+      const clampedAspect = Math.max(0.52, Math.min(0.95, aspect));
+      this.camera.fov = 54;
+      this.baseCamPos.set(0.0, 8.8, 16.2 / clampedAspect);
+      this.baseLookAt.set(0.0, 0.15, -0.2);
+    } else {
+      this.camera.fov = 42;
+      this.baseCamPos.set(0, 6.8, 16.5);
+      this.baseLookAt.set(0.4, 0.85, -0.3);
+    }
+    this.camera.aspect = aspect;
+    this.camera.updateProjectionMatrix();
+  }
+
   handleResize() {
     if (!this.renderer || !this.camera) return;
     this.width = (this.container && this.container.clientWidth) || window.innerWidth || 1280;
     this.height = (this.container && this.container.clientHeight) || window.innerHeight || 720;
 
-    this.camera.aspect = this.width / Math.max(1, this.height);
-    this.camera.updateProjectionMatrix();
+    this._applyResponsiveCameraFraming();
     this.renderer.setSize(this.width, this.height);
   }
 
